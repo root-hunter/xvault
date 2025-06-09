@@ -1,0 +1,3 @@
+RootFS
+
+Coin
