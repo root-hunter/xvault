@@ -125,11 +125,11 @@ macro_rules! generate_file_bin_tests {
 
 // TEST TEXT FILES
 generate_file_text_tests! {
-    (test_file_text_1, "text/README.md"),
-    (test_file_text_2, "text/Satoshi_Nakamoto.html"),
+    (file_text_1, "text/README.md"),
+    (file_text_2, "text/Satoshi_Nakamoto.html"),
 }
 
 // TEST BIN FILES
 generate_file_bin_tests! {
-    (test_file_bin_1, "bin/Pac_2005.exe"),
+    (file_bin_1, "bin/Pac_2005.exe"),
 }
