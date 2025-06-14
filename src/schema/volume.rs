@@ -25,7 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::schema::{chunk::Chunk, file::DFile};
+use crate::schema::{chunk::Chunk, xfile::XFile};
 
 #[derive(Debug)]
 pub enum Error {
@@ -114,9 +114,9 @@ impl Volume {
         self.chunks.push(chunk);
     }
 
-    pub fn add_chunks_from_file(&mut self, file: &mut DFile) {
+    pub fn add_chunks_from_file(&mut self, file: &mut XFile) {
         for chunk in file.chunks.clone() {
-            self.chunks.push(chunk);
+            self.add_chunk(chunk);
         }
     }
 

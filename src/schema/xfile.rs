@@ -19,21 +19,22 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs::{self},
     io::{self, Read},
+    os::unix::fs::MetadataExt,
     path::Path,
 };
 use uuid::Uuid;
 
-use crate::schema::chunk::{Chunk, CHUNK_SIZE};
-
+use crate::schema::chunk::{CHUNK_SIZE, Chunk};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct DFile {
+pub struct XFile {
     pub uid: String,
     pub vpath: String,
+    pub size: usize,
     pub chunks: Vec<Chunk>,
 }
 
-impl DFile {
+impl XFile {
     pub fn new(user_uid: Uuid, file_path: String, vpath: String) -> Result<Self, io::Error> {
         let file_path = Path::new(&file_path);
 
@@ -45,33 +46,51 @@ impl DFile {
             let filename = file_path.file_name().unwrap();
             let filename = filename.to_str().unwrap();
             let vabs = format!("{}/{}", vpath, filename);
-
             let file_uid = Uuid::new_v5(&user_uid, vabs.as_bytes());
+
+            let metadata = file.metadata().unwrap();
+            let file_length = metadata.size() as usize;
 
             let mut buf = [0u8; CHUNK_SIZE];
 
             let mut i: usize = 0;
-            while file.read(&mut buf).unwrap() > 0 {
+
+            loop {
+                let read_bytes = file.read(&mut buf).unwrap();
+                let data = buf.to_vec();
+
                 let chunk_uid = Uuid::new_v5(&file_uid, &i.to_be_bytes());
+                let mut length = None;
+
+                if read_bytes < CHUNK_SIZE {
+                    length = Some(file_length - (CHUNK_SIZE * i));
+                }
+
                 let chunk = Chunk {
                     uid: chunk_uid.into(),
-                    data: buf.to_vec(),
+                    data: data,
+                    length: length,
                 };
 
                 buf = [0u8; CHUNK_SIZE];
                 chunks.push(chunk);
+
+                if read_bytes < CHUNK_SIZE {
+                    break;
+                }
                 i += 1;
             }
 
-            return Ok(DFile {
+            return Ok(XFile {
                 uid: file_uid.into(),
                 vpath: vabs,
                 chunks: chunks,
+                size: file_length,
             });
         } else {
             return Err(file.unwrap_err());
         }
     }
+
+    pub fn export(self) {}
 }
-
-

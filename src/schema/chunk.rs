@@ -30,4 +30,5 @@ pub const CHUNK_SIZE: usize = 512;
 pub struct Chunk {
     pub uid: String,
     pub data: Vec<u8>,
+    pub length: Option<usize>
 }

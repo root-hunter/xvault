@@ -17,5 +17,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub mod device;
 pub mod volume;
-pub mod file;
+pub mod xfile;
 pub mod chunk;
