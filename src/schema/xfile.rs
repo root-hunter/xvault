@@ -105,8 +105,13 @@ impl XFile {
         return self.export_path(path);
     }
 
-
     pub fn export_path(self, path: &Path) -> Result<(), Error> {
+        if let Some(parent) = path.parent() {
+            if let Err(err) = fs::create_dir_all(parent) {
+                return Err(Error::IO(err));
+            }
+        }
+
         let file = File::create(path);
 
         if let Ok(mut file) = file {
@@ -129,5 +134,3 @@ impl XFile {
         }
     }
 }
-
-
