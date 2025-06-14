@@ -90,13 +90,9 @@ fn test_file(file_path: &str, test: TestFileFun) {
     }
 
     let user_uid = Uuid::parse_str(USER_UID).unwrap();
-    let vol1 = Volume::new(VOL_PATH.into(), 10).unwrap();
-
     let file = XFile::new(user_uid, &assets_file_path, vfolder.into()).unwrap();
 
     file.export_path(&export_file_path).unwrap();
-
-    // TEST
 
     test(&assets_file_path, &export_file_path);
 }
