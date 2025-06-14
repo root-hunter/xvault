@@ -32,7 +32,6 @@ pub enum Error {
 }
 
 /*
-
     File has chunks ordered internally
 */
 #[derive(Serialize, Deserialize, Clone, Debug)]
