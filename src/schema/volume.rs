@@ -39,19 +39,10 @@ struct VolumeWrap {
     pub data: Volume,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Volume {
     pub path: String,
     pub chunks: Vec<Chunk>,
-}
-
-impl Clone for Volume {
-    fn clone(&self) -> Self {
-        Self {
-            path: self.path.clone(),
-            chunks: self.chunks.clone(),
-        }
-    }
 }
 
 impl Volume {
@@ -79,27 +70,43 @@ impl Volume {
     }
 
     pub fn save(&mut self) -> Result<(), Error> {
-        let fp = self.open();
+        let exists = self.exists();
 
-        if let Ok(mut fp) = fp {
-            let mut buffer = [0u8; 4096 * 10];
+        if let Ok(exists) = exists {
+            if exists {
+                let path = Path::new(&self.path);
 
-            let length = bincode::encode_into_slice(
-                VolumeWrap { data: self.clone() },
-                &mut buffer,
-                bincode::config::standard(),
-            )
-            .unwrap();
+                let fp = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .truncate(true)
+                    .open(path);
 
-            let res = fp.write(&buffer[..length]);
+                if let Ok(mut fp) = fp {
+                    let mut buffer = [0u8; 4096 * 10];
 
-            if let Ok(_) = res {
-                return Ok(());
+                    let length = bincode::encode_into_slice(
+                        VolumeWrap { data: self.clone() },
+                        &mut buffer,
+                        bincode::config::standard(),
+                    )
+                    .unwrap();
+
+                    let res = fp.write(&buffer[..length]);
+
+                    if let Ok(_) = res {
+                        return Ok(());
+                    } else {
+                        return Err(Error::IO(res.unwrap_err()));
+                    }
+                } else {
+                    return Err(Error::IO(fp.unwrap_err()));
+                }
             } else {
-                return Err(Error::IO(res.unwrap_err()));
+                return Err(Error::FileNotExists);
             }
         } else {
-            return Err(fp.unwrap_err());
+            return Err(exists.unwrap_err());
         }
     }
 
@@ -113,27 +120,11 @@ impl Volume {
         }
     }
 
-    fn open(&mut self) -> Result<File, Error> {
+    fn exists(&mut self) -> Result<bool, Error> {
         let exists = fs::exists(self.path.clone());
 
         if let Ok(exists) = exists {
-            if exists {
-                let path = Path::new(&self.path);
-
-                let fp = OpenOptions::new()
-                    .write(true)
-                    .create(true)
-                    .truncate(true)
-                    .open(path);
-
-                if let Ok(fp) = fp {
-                    return Ok(fp);
-                } else {
-                    return Err(Error::IO(fp.unwrap_err()));
-                }
-            } else {
-                return Err(Error::FileNotExists);
-            }
+            return Ok(exists);
         } else {
             return Err(Error::IO(exists.unwrap_err()));
         }
