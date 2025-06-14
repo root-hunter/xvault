@@ -32,6 +32,7 @@ fn main() {
     let mut file = DFile::new(user_uid, file_path.into(), vpath.into()).unwrap();
 
     vol1.add_chunks_from_file(&mut file);
+    vol1.save().unwrap();
 
     println!("{:?}", file);
 }

@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub use bincode::{Decode, Encode};
 pub use serde::{Deserialize, Serialize};
-use std::io::Write;
+use std::{fs::OpenOptions, io::Write};
 pub use std::{
     fs::{self, File},
     io::{self, Read},
@@ -27,8 +27,9 @@ pub use uuid::Uuid;
 
 use crate::schema::{chunk::Chunk, file::DFile};
 
+#[derive(Debug)]
 pub enum Error {
-    FileNone,
+    FileNotExists,
     IO(io::Error),
 }
 
@@ -40,9 +41,6 @@ struct VolumeWrap {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Volume {
-    #[serde(skip)]
-    pub fp: Option<File>,
-
     pub path: String,
     pub chunks: Vec<Chunk>,
 }
@@ -50,7 +48,6 @@ pub struct Volume {
 impl Clone for Volume {
     fn clone(&self) -> Self {
         Self {
-            fp: None,
             path: self.path.clone(),
             chunks: self.chunks.clone(),
         }
@@ -66,34 +63,25 @@ impl Volume {
         } else {
             let path = Path::new(&path_str);
 
-            let file;
-
             if !exists.unwrap() {
-                file = fs::File::create(path);
-            } else {
-                file = fs::File::open(path);
+                let res = fs::File::create(path);
+
+                if let Err(err) = res {
+                    return Err(err);
+                }
             }
 
-            if let Ok(file) = file {
-                let chunks = Vec::<Chunk>::new();
-
-                return Ok(Volume {
-                    path: path_str,
-                    chunks: chunks,
-                    fp: Some(file),
-                });
-            } else {
-                return Err(file.unwrap_err());
-            }
+            return Ok(Volume {
+                path: path_str,
+                chunks: Vec::<Chunk>::new(),
+            });
         }
     }
 
     pub fn save(&mut self) -> Result<(), Error> {
-        let exists = fs::exists(self.path.clone());
+        let fp = self.open();
 
-        if let Ok(exists) = exists {
-            let path = Path::new(&self.path);
-
+        if let Ok(mut fp) = fp {
             let mut buffer = [0u8; 4096 * 10];
 
             let length = bincode::encode_into_slice(
@@ -103,19 +91,15 @@ impl Volume {
             )
             .unwrap();
 
-            if let Some(file) = &mut self.fp {
-                let res = file.write(&buffer[..length]);
+            let res = fp.write(&buffer[..length]);
 
-                if let Ok(_) = res {
-                    return Ok(());
-                } else {
-                    return Err(Error::IO(res.unwrap_err()));
-                }
+            if let Ok(_) = res {
+                return Ok(());
             } else {
-                return Err(Error::FileNone);
+                return Err(Error::IO(res.unwrap_err()));
             }
         } else {
-            return Err(Error::IO(exists.unwrap_err()));
+            return Err(fp.unwrap_err());
         }
     }
 
@@ -126,6 +110,32 @@ impl Volume {
     pub fn add_chunks_from_file(&mut self, file: &mut DFile) {
         for chunk in file.chunks.clone() {
             self.chunks.push(chunk);
+        }
+    }
+
+    fn open(&mut self) -> Result<File, Error> {
+        let exists = fs::exists(self.path.clone());
+
+        if let Ok(exists) = exists {
+            if exists {
+                let path = Path::new(&self.path);
+
+                let fp = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .truncate(true)
+                    .open(path);
+
+                if let Ok(fp) = fp {
+                    return Ok(fp);
+                } else {
+                    return Err(Error::IO(fp.unwrap_err()));
+                }
+            } else {
+                return Err(Error::FileNotExists);
+            }
+        } else {
+            return Err(Error::IO(exists.unwrap_err()));
         }
     }
 }
