@@ -25,7 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{chunk::Chunk, volume, xfile::XFile};
+use crate::engine::{chunk::{Chunk, ChunkHandler}, volume, xfile::XFile};
 
 #[derive(Debug)]
 pub enum Error {
@@ -124,20 +124,6 @@ impl Volume {
         }
     }
 
-    pub fn get_chunk(&self, uuid: String) -> Option<&Chunk> {
-        return self.chunks.get(&uuid);
-    }
-
-    pub fn add_chunk(&mut self, chunk: Chunk) {
-        self.chunks.insert(chunk.uid.clone(), chunk);
-    }
-
-    pub fn add_chunks_from_file(&mut self, file: &mut XFile) {
-        for chunk in file.chunks.clone() {
-            self.add_chunk(chunk);
-        }
-    }
-
     fn exists(&mut self) -> Result<bool, Error> {
         let exists = fs::exists(self.path.clone());
 
@@ -145,6 +131,23 @@ impl Volume {
             return Ok(exists);
         } else {
             return Err(Error::IO(exists.unwrap_err()));
+        }
+    }
+}
+
+
+impl ChunkHandler for Volume {
+    fn get_chunk(&mut self, uuid: String) -> Option<&Chunk> {
+        return self.chunks.get(&uuid);
+    }
+
+    fn add_chunk(&mut self, chunk: Chunk) {
+        self.chunks.insert(chunk.uid.clone(), chunk);
+    }
+
+    fn add_chunks_from_file(&mut self, file: &mut XFile) {
+        for chunk in file.chunks.clone() {
+            self.add_chunk(chunk);
         }
     }
 }

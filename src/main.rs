@@ -2,7 +2,7 @@ use std::path::Path;
 
 use rand::rngs::StdRng;
 use uuid::Uuid;
-use xvault::engine::chunk::CHUNK_SIZE;
+use xvault::engine::chunk::{ChunkHandler, CHUNK_SIZE};
 use xvault::engine::{volume::Volume, xfile::XFile};
 
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";

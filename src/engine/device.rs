@@ -25,7 +25,10 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{chunk::Chunk, volume::Volume};
+use crate::engine::{
+    chunk::{Chunk, ChunkHandler},
+    volume::Volume,
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Device {
@@ -47,17 +50,26 @@ impl Device {
         }
     }
 
+    pub fn add_volume(&mut self, volume: Volume) {
+        self.volumes.insert(volume.uid.clone(), volume);
+    }
+}
 
-    pub fn get_chunk(&mut self, chunk_uid: String) -> Option<&Chunk> {
-        for volume in self.volumes.values() {
+impl ChunkHandler for Device {
+    fn get_chunk(&mut self, chunk_uid: String) -> Option<&Chunk> {
+        for volume in self.volumes.values_mut() {
             if let Some(chunk) = volume.get_chunk(chunk_uid.clone()) {
                 return Some(chunk);
             }
         }
         return None;
     }
-
-    pub fn add_volume(&mut self, volume: Volume) {
-        self.volumes.insert(volume.uid.clone(), volume);
+    
+    fn add_chunk(&mut self, chunk: Chunk) {
+        todo!()
+    }
+    
+    fn add_chunks_from_file(&mut self, file: &mut super::xfile::XFile) {
+        todo!()
     }
 }

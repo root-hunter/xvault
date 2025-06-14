@@ -25,6 +25,8 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
+use crate::engine::xfile::XFile;
+
 pub const CHUNK_SIZE: usize = 512;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -38,4 +40,10 @@ impl Debug for Chunk {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Chunk {{ uid: {}, length: {:?} }}", self.uid, self.length)
     }
+}
+
+pub trait ChunkHandler {
+    fn get_chunk(&mut self, uuid: String) -> Option<&Chunk>;
+    fn add_chunk(&mut self, chunk: Chunk);
+    fn add_chunks_from_file(&mut self, file: &mut XFile);
 }
