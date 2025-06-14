@@ -20,7 +20,7 @@ use std::{
     fs::{self, File},
     io::{self, Read, Write},
     os::unix::fs::MetadataExt,
-    path::{Path, PathBuf},
+    path::Path,
 };
 use uuid::Uuid;
 
