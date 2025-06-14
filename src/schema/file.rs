@@ -15,10 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, File},
+    fs::{self},
     io::{self, Read},
     path::Path,
 };

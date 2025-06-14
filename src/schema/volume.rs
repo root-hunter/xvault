@@ -75,7 +75,7 @@ impl Volume {
             }
 
             if let Ok(file) = file {
-                let mut chunks = Vec::<Chunk>::new();
+                let chunks = Vec::<Chunk>::new();
 
                 return Ok(Volume {
                     path: path_str,
