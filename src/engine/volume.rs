@@ -25,7 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{chunk::{Chunk, ChunkHandler}, volume, xfile::XFile};
+use crate::engine::{chunk::{Chunk, ChunkHandler}, xfile::XFile};
 
 #[derive(Debug)]
 pub enum Error {
