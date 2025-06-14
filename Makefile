@@ -1,3 +1,2 @@
-run:
+test:
 	cargo test
-	cargo run

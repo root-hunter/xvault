@@ -20,7 +20,7 @@ use std::{
     fs::{self, File},
     io::{self, Read, Write},
     os::unix::fs::MetadataExt,
-    path::Path,
+    path::{Path, PathBuf},
 };
 use uuid::Uuid;
 
@@ -44,9 +44,7 @@ pub struct XFile {
 }
 
 impl XFile {
-    pub fn new(user_uid: Uuid, file_path: String, vpath: String) -> Result<Self, io::Error> {
-        let file_path = Path::new(&file_path);
-
+    pub fn new(user_uid: Uuid, file_path: &Path, vpath: String) -> Result<Self, io::Error> {
         let file = fs::File::open(file_path);
 
         if let Ok(mut file) = file {
@@ -104,6 +102,11 @@ impl XFile {
     pub fn export(self, path: String) -> Result<(), Error> {
         let path = Path::new(&path);
 
+        return self.export_path(path);
+    }
+
+
+    pub fn export_path(self, path: &Path) -> Result<(), Error> {
         let file = File::create(path);
 
         if let Ok(mut file) = file {
