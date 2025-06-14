@@ -43,7 +43,7 @@ pub struct XFile {
 }
 
 impl XFile {
-    pub fn new(user_uid: Uuid, file_path: &Path, vpath: String) -> Result<Self, io::Error> {
+    pub fn new(user_uid: Uuid, file_path: &Path, vfolder: String) -> Result<Self, io::Error> {
         let file = fs::File::open(file_path);
 
         if let Ok(mut file) = file {
@@ -51,7 +51,8 @@ impl XFile {
 
             let filename = file_path.file_name().unwrap();
             let filename = filename.to_str().unwrap();
-            let vabs = format!("{}/{}", vpath, filename);
+            
+            let vabs = format!("{}/{}", vfolder, filename);
             let file_uid = Uuid::new_v5(&user_uid, vabs.as_bytes());
 
             let metadata = file.metadata().unwrap();

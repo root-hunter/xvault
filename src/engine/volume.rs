@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub use bincode::{Decode, Encode};
 pub use serde::{Deserialize, Serialize};
-use std::{fs::OpenOptions, io::Write};
+use std::{collections::HashMap, fs::OpenOptions, io::Write};
 pub use std::{
     fs::{self, File},
     io::{self, Read},
@@ -42,7 +42,7 @@ struct VolumeWrap {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Volume {
     pub path: String,
-    pub chunks: Vec<Chunk>,
+    pub chunks: HashMap<String, Chunk>,
     pub max_size: usize,
 }
 
@@ -65,7 +65,7 @@ impl Volume {
 
             return Ok(Volume {
                 path: path_str,
-                chunks: Vec::<Chunk>::new(),
+                chunks: HashMap::new(),
                 max_size
             });
         }
@@ -113,7 +113,7 @@ impl Volume {
     }
 
     pub fn add_chunk(&mut self, chunk: Chunk) {
-        self.chunks.push(chunk);
+        self.chunks.insert(chunk.uid.clone(), chunk);
     }
 
     pub fn add_chunks_from_file(&mut self, file: &mut XFile) {

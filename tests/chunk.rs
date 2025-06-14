@@ -1,21 +1,13 @@
 use std::path::Path;
 
-use rand::rngs::StdRng;
 use uuid::Uuid;
 use RootFS::engine::chunk::CHUNK_SIZE;
-use RootFS::engine::{device::Device, volume::Volume, xfile::XFile};
+use RootFS::engine::xfile::XFile;
 
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
-const DEVIDE_UID: &str = "4754f539-a953-4dc4-ad37-7a8ab142218c";
 
-use rand::{rng, thread_rng, SeedableRng};
-use rand::seq::SliceRandom;
-
-fn main() {
-    const vol_path_1: &str = "./tmp/vol100.rootfs";
-    const vol_path_2: &str = "./tmp/vol200.rootfs";
-    const vol_path_3: &str = "./tmp/vol300.rootfs";
-
+#[test]
+fn test_uids() {
     let user_id = Uuid::parse_str(USER_UID).unwrap();
     let file_path_1 = Path::new("assets/text/README.md");
     let vfolder = "home".to_string();
@@ -24,29 +16,30 @@ fn main() {
 
     println!("File chunks count: {}", file.chunks.len());
 
-    let mut vol1 = Volume::new(vol_path_1.into(), 10).unwrap();
-    let mut vol2 = Volume::new(vol_path_2.into(), 10).unwrap();
-    let mut vol3 = Volume::new(vol_path_3.into(), 10).unwrap();
-
-    let mut rng = StdRng::seed_from_u64(3);
-
-    let mut file_chunks = file.chunks.to_vec();
-
-    file_chunks.shuffle(&mut rng);
-
     println!("XFile: {:#?}", file);
-
-    println!("Shuffle list: {:#?}", file_chunks);
 
     let chunks_count = (file.size as f32) / (CHUNK_SIZE as f32);
     let chunks_count = chunks_count.ceil() as usize;
 
+    let uids = file.chunks.iter().map(|c| c.uid.clone()).collect::<Vec<_>>();
+    let mut generated_uids = Vec::new();
 
     for i in 0..chunks_count {
         let file_uid = Uuid::parse_str(&file.uid).unwrap();
         let chunk_uid = Uuid::new_v5(&file_uid, &i.to_be_bytes());
 
+        generated_uids.push(chunk_uid.to_string());
+
         println!("Chunk UID: {}", chunk_uid);
     }
 
+    if uids.len() != generated_uids.len() {
+        panic!("Mismatch in number of UIDs: expected {}, got {}", uids.len(), generated_uids.len());
+    }
+
+    for uid in uids {
+        if !generated_uids.contains(&uid) {
+            panic!("UID {} not found in generated UIDs", uid);
+        }
+    }
 }
