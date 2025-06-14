@@ -16,7 +16,7 @@ const VOL_PATH: &str = "./tmp/vol100.rootfs";
 
 type TestFileFun = fn(&PathBuf, &PathBuf);
 
-fn test_file_text(original_path: &PathBuf, exported_path: &PathBuf) {
+fn compare_files_text(original_path: &PathBuf, exported_path: &PathBuf) {
     let original_file = fs::read_to_string(original_path).unwrap();
     let export_file = fs::read_to_string(exported_path).unwrap();
 
@@ -41,7 +41,7 @@ fn test_file_text(original_path: &PathBuf, exported_path: &PathBuf) {
     }
 }
 
-fn test_file_bin(original_path: &PathBuf, exported_path: &PathBuf) {
+fn compare_files_bin(original_path: &PathBuf, exported_path: &PathBuf) {
     const BUFFER_SIZE: usize = 8192;
 
     let file1 = File::open(original_path).unwrap();
@@ -71,7 +71,7 @@ fn test_file_bin(original_path: &PathBuf, exported_path: &PathBuf) {
     }
 }
 
-fn test_file(file_path: &str, test: TestFileFun) {
+fn test_files(file_path: &str, compare: TestFileFun) {
     let vfolder = "/home";
     let assets_path = Path::new(ASSETS_FOLDER);
     let assets_file_path = assets_path.join(file_path);
@@ -94,7 +94,7 @@ fn test_file(file_path: &str, test: TestFileFun) {
 
     file.export_path(&export_file_path).unwrap();
 
-    test(&assets_file_path, &export_file_path);
+    compare(&assets_file_path, &export_file_path);
 }
 
 macro_rules! generate_file_text_tests {
@@ -102,10 +102,15 @@ macro_rules! generate_file_text_tests {
         $(
             #[test]
             fn $name() {
-                test_file($file1, test_file_text);
+                test_files($file1, compare_files_text);
             }
         )*
     };
+}
+
+generate_file_text_tests! {
+    (file_text_1, "text/README.md"),
+    (file_text_2, "text/Satoshi_Nakamoto.html"),
 }
 
 macro_rules! generate_file_bin_tests {
@@ -113,19 +118,12 @@ macro_rules! generate_file_bin_tests {
         $(
             #[test]
             fn $name() {
-                test_file($file1, test_file_bin);
+                test_files($file1, compare_files_bin);
             }
         )*
     };
 }
 
-// TEST TEXT FILES
-generate_file_text_tests! {
-    (file_text_1, "text/README.md"),
-    (file_text_2, "text/Satoshi_Nakamoto.html"),
-}
-
-// TEST BIN FILES
 generate_file_bin_tests! {
     (file_bin_1, "bin/Pac_2005.exe"),
 }
