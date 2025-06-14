@@ -2,7 +2,7 @@ use std::{
     fs::{self, File}, io::{BufReader, Read}, path::{Path, PathBuf}
 };
 
-use RootFS::schema::{device::Device, volume::Volume, xfile::XFile};
+use RootFS::schema::{volume::Volume, xfile::XFile};
 use uuid::Uuid;
 
 use similar::{Algorithm, TextDiff};
