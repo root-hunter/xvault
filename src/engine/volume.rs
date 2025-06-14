@@ -25,7 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::schema::{chunk::Chunk, xfile::XFile};
+use crate::engine::{chunk::Chunk, xfile::XFile};
 
 #[derive(Debug)]
 pub enum Error {
@@ -43,10 +43,11 @@ struct VolumeWrap {
 pub struct Volume {
     pub path: String,
     pub chunks: Vec<Chunk>,
+    pub max_size: usize,
 }
 
 impl Volume {
-    pub fn new(path_str: String, size: usize) -> Result<Self, io::Error> {
+    pub fn new(path_str: String, max_size: usize) -> Result<Self, io::Error> {
         let exists = fs::exists(path_str.clone());
 
         if exists.is_err() {
@@ -65,6 +66,7 @@ impl Volume {
             return Ok(Volume {
                 path: path_str,
                 chunks: Vec::<Chunk>::new(),
+                max_size
             });
         }
     }

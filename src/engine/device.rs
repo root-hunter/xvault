@@ -24,8 +24,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::schema::volume::Volume;
-
+use crate::engine::volume::Volume;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Device {
