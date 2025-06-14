@@ -42,7 +42,7 @@ fn test_file_text(original_path: &PathBuf, exported_path: &PathBuf) {
 }
 
 fn test_file_bin(original_path: &PathBuf, exported_path: &PathBuf) {
-     const BUFFER_SIZE: usize = 8192;
+    const BUFFER_SIZE: usize = 8192;
 
     let file1 = File::open(original_path).unwrap();
     let file2 = File::open(exported_path).unwrap();
