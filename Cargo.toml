@@ -24,3 +24,6 @@ version = "2.0.1"
 features = [
     "serde"
 ]
+
+[dev-dependencies]
+similar = "2.7.0"

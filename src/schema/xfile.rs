@@ -17,15 +17,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self},
-    io::{self, Read},
+    fs::{self, File},
+    io::{self, Read, Write},
     os::unix::fs::MetadataExt,
     path::Path,
 };
 use uuid::Uuid;
 
-use crate::schema::chunk::{CHUNK_SIZE, Chunk};
+use crate::schema::chunk::{self, CHUNK_SIZE, Chunk};
 
+#[derive(Debug)]
+pub enum Error {
+    IO(io::Error),
+}
+
+/*
+
+    File has chunks ordered internally
+*/
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct XFile {
     pub uid: String,
@@ -92,5 +101,30 @@ impl XFile {
         }
     }
 
-    pub fn export(self) {}
+    pub fn export(self, path: String) -> Result<(), Error> {
+        let path = Path::new(&path);
+
+        let file = File::create(path);
+
+        if let Ok(mut file) = file {
+            for chunk in self.chunks {
+                let data = if chunk.length.is_some() {
+                    let length = chunk.length.unwrap();
+                    &chunk.data.as_slice()[..length]
+                } else {
+                    &chunk.data.as_slice()
+                };
+
+                if let Err(err) = file.write(data) {
+                    return Err(Error::IO(err));
+                }
+            }
+
+            return Ok(());
+        } else {
+            return Err(Error::IO(file.unwrap_err()));
+        }
+    }
 }
+
+
