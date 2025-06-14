@@ -30,7 +30,6 @@ macro_rules! generate_file_tests {
 
                 let dev1 = Device::new(DEVIDE_UID.into());
 
-
                 if let Err(err) = fs::remove_file(VOL_PATH) {
                     println!("Vol file doest find");
                 }
