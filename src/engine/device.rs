@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub use bincode::{Decode, Encode};
 pub use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 pub use std::{
     fs::{self, File},
     io::{self, Read},
@@ -24,12 +25,12 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::volume::Volume;
+use crate::engine::{chunk::Chunk, volume::Volume};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Device {
-    uid: String,
-    volumes: Vec<Volume>,
+    pub uid: String,
+    pub volumes: HashMap<String, Volume>,
 }
 
 impl Device {
@@ -41,8 +42,22 @@ impl Device {
         } else {
             return Ok(Self {
                 uid: uid.unwrap().into(),
-                volumes: Vec::new(),
+                volumes: HashMap::new(),
             });
         }
+    }
+
+
+    pub fn get_chunk(&mut self, chunk_uid: String) -> Option<&Chunk> {
+        for volume in self.volumes.values() {
+            if let Some(chunk) = volume.get_chunk(chunk_uid.clone()) {
+                return Some(chunk);
+            }
+        }
+        return None;
+    }
+
+    pub fn add_volume(&mut self, volume: Volume) {
+        self.volumes.insert(volume.uid.clone(), volume);
     }
 }

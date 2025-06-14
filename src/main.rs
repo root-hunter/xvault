@@ -2,14 +2,14 @@ use std::path::Path;
 
 use rand::rngs::StdRng;
 use uuid::Uuid;
-use RootFS::engine::chunk::CHUNK_SIZE;
-use RootFS::engine::{volume::Volume, xfile::XFile};
+use xvault::engine::chunk::CHUNK_SIZE;
+use xvault::engine::{volume::Volume, xfile::XFile};
 
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
 const DEVIDE_UID: &str = "4754f539-a953-4dc4-ad37-7a8ab142218c";
 
 use rand::SeedableRng;
-use rand::seq::SliceRandom;
+use rand::seq::{IndexedRandom, SliceRandom};
 
 fn main() {
     const vol_path_1: &str = "./tmp/vol100.rootfs";
@@ -24,9 +24,9 @@ fn main() {
 
     println!("File chunks count: {}", file.chunks.len());
 
-    let vol1 = Volume::new(vol_path_1.into(), 10).unwrap();
-    let vol2 = Volume::new(vol_path_2.into(), 10).unwrap();
-    let vol3 = Volume::new(vol_path_3.into(), 10).unwrap();
+    let mut vol1 = Volume::new(DEVIDE_UID.into(), vol_path_1.into(), 10).unwrap();
+    let mut vol2 = Volume::new(DEVIDE_UID.into(), vol_path_2.into(), 10).unwrap();
+    let mut vol3 = Volume::new(DEVIDE_UID.into(), vol_path_3.into(), 10).unwrap();
 
     let mut rng = StdRng::seed_from_u64(3);
 
@@ -38,9 +38,22 @@ fn main() {
 
     println!("Shuffle list: {:#?}", file_chunks);
 
+    let vols = vec![1, 2, 3];
+
+    for chunk in file_chunks {
+        let vol_index = vols.choose(&mut rng).unwrap();        
+        let vol = match vol_index {
+            1 => &mut vol1,
+            2 => &mut vol2,
+            3 => &mut vol3,
+            _ => panic!("Invalid volume index"),
+        };
+
+        vol.add_chunk(chunk);
+    }
+
     let chunks_count = (file.size as f32) / (CHUNK_SIZE as f32);
     let chunks_count = chunks_count.ceil() as usize;
-
 
     for i in 0..chunks_count {
         let file_uid = Uuid::parse_str(&file.uid).unwrap();
@@ -49,4 +62,11 @@ fn main() {
         println!("Chunk UID: {}", chunk_uid);
     }
 
+    println!("Vol1: {:#?}", vol1);
+    println!("Vol2: {:#?}", vol2);
+    println!("Vol3: {:#?}", vol3);
+
+    vol1.save().unwrap();
+    vol2.save().unwrap();
+    vol3.save().unwrap();
 }

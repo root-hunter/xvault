@@ -25,7 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{chunk::Chunk, xfile::XFile};
+use crate::engine::{chunk::Chunk, volume, xfile::XFile};
 
 #[derive(Debug)]
 pub enum Error {
@@ -41,20 +41,26 @@ struct VolumeWrap {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Volume {
+    pub uid: String,
     pub path: String,
     pub chunks: HashMap<String, Chunk>,
     pub max_size: usize,
 }
 
 impl Volume {
-    pub fn new(path_str: String, max_size: usize) -> Result<Self, io::Error> {
+    pub fn new(device_uid: String, path_str: String, max_size: usize) -> Result<Self, io::Error> {
         let exists = fs::exists(path_str.clone());
 
         if exists.is_err() {
             return Err(exists.unwrap_err());
         } else {
             let path = Path::new(&path_str);
-
+            let abs_path = if path.is_absolute() {
+                path.to_path_buf()
+            } else {
+                fs::canonicalize(path_str.clone()).unwrap_or_else(|_| path.to_path_buf())
+            };
+            
             if !exists.unwrap() {
                 let res = fs::File::create(path);
 
@@ -63,9 +69,15 @@ impl Volume {
                 }
             }
 
+            let volume_uid = Uuid::new_v5(
+                &Uuid::parse_str(&device_uid).unwrap(),
+                path_str.as_bytes(),
+            );
+
             return Ok(Volume {
-                path: path_str,
+                path: abs_path.to_string_lossy().to_string(),
                 chunks: HashMap::new(),
+                uid: volume_uid.to_string(),
                 max_size
             });
         }
@@ -110,6 +122,10 @@ impl Volume {
         } else {
             return Err(exists.unwrap_err());
         }
+    }
+
+    pub fn get_chunk(&self, uuid: String) -> Option<&Chunk> {
+        return self.chunks.get(&uuid);
     }
 
     pub fn add_chunk(&mut self, chunk: Chunk) {

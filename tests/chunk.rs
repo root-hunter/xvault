@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::path::Path;
 
 use uuid::Uuid;
-use RootFS::engine::chunk::CHUNK_SIZE;
-use RootFS::engine::xfile::XFile;
+use xvault::engine::chunk::CHUNK_SIZE;
+use xvault::engine::xfile::XFile;
 
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
 

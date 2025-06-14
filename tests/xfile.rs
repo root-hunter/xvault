@@ -19,7 +19,7 @@ use std::{
     fs::{self, File}, io::{BufReader, Read}, path::{Path, PathBuf}
 };
 
-use RootFS::engine::xfile::XFile;
+use xvault::engine::xfile::XFile;
 use uuid::Uuid;
 
 use similar::{Algorithm, TextDiff};
