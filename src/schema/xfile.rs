@@ -24,7 +24,7 @@ use std::{
 };
 use uuid::Uuid;
 
-use crate::schema::chunk::{self, CHUNK_SIZE, Chunk};
+use crate::schema::chunk::{CHUNK_SIZE, Chunk};
 
 #[derive(Debug)]
 pub enum Error {

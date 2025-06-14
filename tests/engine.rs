@@ -1,9 +1,9 @@
-use std::{fs::{self, File}, io::Read};
+use std::fs::{self};
 
 use uuid::Uuid;
 use RootFS::schema::{device::Device, xfile::XFile, volume::Volume};
 
-use similar::{Algorithm, ChangeTag, TextDiff};
+use similar::{Algorithm, TextDiff};
 
 #[test]
 pub fn serialize_and_deserilize() {
@@ -20,7 +20,7 @@ pub fn serialize_and_deserilize() {
     fs::remove_file(export_path).unwrap();
 
     let user_uid = Uuid::parse_str(user_uid).unwrap();
-    let mut vol1 = Volume::new(vol_path.into(), 10).unwrap();
+    let vol1 = Volume::new(vol_path.into(), 10).unwrap();
 
     let file = XFile::new(user_uid, file_path.into(), vfolder.into()).unwrap();
     println!("{:?}", file);
