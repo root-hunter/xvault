@@ -76,21 +76,21 @@ fn test_file(file_path: &str, compare: FnCompareFile) {
 
     let mut vol1 = Volume::new();
     vol1.set_path(VOL_PATH_1.into())
-        .set_uid(DEVIDE_UID.into())
+        .set_uid_from_device(DEVIDE_UID.into())
         .set_max_size(10)
         .build()
         .unwrap();
 
     let mut vol2 = Volume::new();
     vol2.set_path(VOL_PATH_2.into())
-        .set_uid(DEVIDE_UID.into())
+        .set_uid_from_device(DEVIDE_UID.into())
         .set_max_size(10)
         .build()
         .unwrap();
 
     let mut vol3 = Volume::new();
     vol3.set_path(VOL_PATH_3.into())
-        .set_uid(DEVIDE_UID.into())
+        .set_uid_from_device(DEVIDE_UID.into())
         .set_max_size(10)
         .build()
         .unwrap();

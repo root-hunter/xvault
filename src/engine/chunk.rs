@@ -29,7 +29,7 @@ use crate::engine::xfile::XFile;
 
 pub const CHUNK_SIZE: usize = 512;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Encode, Clone)]
 pub struct Chunk {
     pub uid: String,
     pub data: Vec<u8>,
