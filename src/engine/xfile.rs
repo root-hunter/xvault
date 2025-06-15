@@ -26,9 +26,17 @@ use uuid::Uuid;
 
 use crate::engine::chunk::{CHUNK_SIZE, Chunk};
 
+pub type XFileChunks = Vec<Chunk>;
+
 #[derive(Debug)]
 pub enum Error {
     IO(io::Error),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct XFileQuery {
+    pub uid: String,
+    pub chunk_count: usize,
 }
 
 /*
@@ -39,10 +47,21 @@ pub struct XFile {
     pub uid: String,
     pub vpath: String,
     pub size: usize,
-    pub chunks: Vec<Chunk>,
+    pub chunks: XFileChunks,
 }
 
 impl XFile {
+    pub fn build_chunk_uid(file_uid: String, index: usize) -> String {
+        let index_bytes = index.to_be_bytes();
+        let file_uid = Uuid::parse_str(&file_uid).unwrap();
+
+        return Uuid::new_v5(&file_uid, &index_bytes).to_string();
+    }
+
+    pub fn get_chunk_uid(&self, index: usize) -> String {
+        return XFile::build_chunk_uid(self.uid.clone(), index);
+    }
+
     pub fn new(user_uid: Uuid, file_path: &Path, vfolder: String) -> Result<Self, io::Error> {
         let file = fs::File::open(file_path);
 
@@ -51,7 +70,7 @@ impl XFile {
 
             let filename = file_path.file_name().unwrap();
             let filename = filename.to_str().unwrap();
-            
+
             let vabs = format!("{}/{}", vfolder, filename);
             let file_uid = Uuid::new_v5(&user_uid, vabs.as_bytes());
 
@@ -133,4 +152,8 @@ impl XFile {
             return Err(Error::IO(file.unwrap_err()));
         }
     }
+}
+
+pub trait XFileHandler {
+    fn find_file_chunks(&mut self, query: XFileQuery) -> Option<XFileChunks>;
 }

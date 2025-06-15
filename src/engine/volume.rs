@@ -27,6 +27,8 @@ pub use uuid::Uuid;
 
 use crate::engine::{chunk::{Chunk, ChunkHandler}, xfile::XFile};
 
+pub type VolumeChunks = HashMap<String, Chunk>;
+
 #[derive(Debug)]
 pub enum Error {
     FileNotExists,
@@ -43,7 +45,7 @@ struct VolumeWrap {
 pub struct Volume {
     pub uid: String,
     pub path: String,
-    pub chunks: HashMap<String, Chunk>,
+    pub chunks: VolumeChunks,
     pub max_size: usize,
 }
 

@@ -28,8 +28,8 @@ pub use uuid::Uuid;
 
 
 use crate::engine::{
-    chunk::{Chunk, ChunkHandler},
-    volume::Volume,
+    chunk::{self, Chunk, ChunkHandler},
+    volume::Volume, xfile::{XFile, XFileChunks, XFileHandler, XFileQuery},
 };
 
 pub enum Error {
@@ -91,5 +91,26 @@ impl ChunkHandler for Device {
     
     fn is_full(self) -> bool {
         return self.volumes.values().all(|v| v.clone().is_full());
+    }
+}
+
+impl XFileHandler for Device {
+    fn find_file_chunks(&mut self, query: XFileQuery) -> Option<XFileChunks> {
+        let file_uid = query.uid;
+        let count = query.chunk_count;
+        let mut chunks: Vec<Chunk> = Vec::new();
+
+        for index in  0..count {
+            let chunk_uid = XFile::build_chunk_uid(file_uid.clone(), index);
+            if let Some(chunk) = self.get_chunk(chunk_uid) {
+                chunks.push(chunk.clone());
+            }
+        }
+
+        if chunks.is_empty() {
+            return None;
+        } else {
+            return Some(chunks);
+        }
     }
 }
