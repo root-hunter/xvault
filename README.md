@@ -30,6 +30,8 @@
 └── README.md
 
 ```
+
+```
 CA_UID = UIDv4()
 DEVICE_UID = UIDv4()
 
