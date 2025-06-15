@@ -1,5 +1,5 @@
 test:
-	cargo test
+	cargo test --verbose
 
 run:
 	cargo run
