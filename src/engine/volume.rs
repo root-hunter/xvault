@@ -80,20 +80,20 @@ impl Volume {
     }
 
     pub fn set_path(&mut self, path: String) -> &mut Self {
-        assert!(!path.is_empty(), "Volume path cannot be empty");
-        
         self.path = path;
         return self;
     }
 
     pub fn set_max_size(&mut self, max_size: usize) -> &mut Self {
-        assert!(max_size > 0, "Volume max_size cannot be 0");
-
         self.max_size = max_size;
         return self;
     }
 
     pub fn build(&mut self) -> Result<&mut Self, io::Error> {
+        assert!(!self.uid.is_empty(), "Volume uid cannot be empty");
+        assert!(!self.path.is_empty(), "Volume path cannot be empty");
+        assert!(self.max_size > 0, "Volume max_size cannot be 0");
+
         let path_str = self.path.clone();
         let exists = fs::exists(path_str.clone());
 
