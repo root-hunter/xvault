@@ -83,10 +83,6 @@ impl ChunkHandler for Device {
         return None;
     }
     
-    fn add_chunks_from_file(&mut self, file: &mut super::xfile::XFile) {
-        todo!()
-    }
-    
     fn is_full(self) -> bool {
         return self.volumes.values().all(|v| v.clone().is_full());
     }

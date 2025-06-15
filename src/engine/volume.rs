@@ -27,7 +27,6 @@ pub use uuid::Uuid;
 
 use crate::engine::{
     chunk::{Chunk, ChunkHandler},
-    xfile::XFile,
 };
 
 pub type VolumeChunks = HashMap<String, Chunk>;
@@ -150,12 +149,6 @@ impl ChunkHandler for Volume {
     fn add_chunk(&mut self, chunk: Chunk) -> Option<String> {
         self.chunks.insert(chunk.uid.clone(), chunk);
         return Some(self.uid.clone());
-    }
-
-    fn add_chunks_from_file(&mut self, file: &mut XFile) {
-        for chunk in file.chunks.clone() {
-            self.add_chunk(chunk);
-        }
     }
 
     fn is_full(self) -> bool {

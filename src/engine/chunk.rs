@@ -46,5 +46,9 @@ pub trait ChunkHandler {
     fn is_full(self) -> bool;
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk>;
     fn add_chunk(&mut self, chunk: Chunk) -> Option<String>;
-    fn add_chunks_from_file(&mut self, file: &mut XFile);
+    fn add_chunks_from_file(&mut self, file: &mut XFile) {
+        for chunk in file.chunks.clone() {
+            self.add_chunk(chunk);
+        }
+    }
 }
