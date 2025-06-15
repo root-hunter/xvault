@@ -30,7 +30,6 @@ use utils::{compare_files_bin, FnCompareFile};
 
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
 const DEVIDE_UID: &str = "4754f539-a953-4dc4-ad37-7a8ab142218c";
-const TMP_FOLDER: &str = "./tmp";
 const ASSETS_FOLDER: &str = "./assets";
 const EXPORTS_FOLDER: &str = "./exports/test_device";
 const VOL_PATH_1: &str = "./tmp/vol_test_device_100.rootfs";
@@ -40,7 +39,6 @@ const VOL_PATH_3: &str = "./tmp/vol_test_device_300.rootfs";
 const RNG_SEED: u64 = 3;
 
 fn test_file(file_path: &str, compare: FnCompareFile) {
-    let vfolder = "/home";
     let assets_path = Path::new(ASSETS_FOLDER);
     let assets_file_path = assets_path.join(file_path);
 
