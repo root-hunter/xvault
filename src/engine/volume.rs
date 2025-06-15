@@ -55,8 +55,8 @@ impl Default for Volume {
         Self {
             uid: Default::default(),
             path: Default::default(),
-            chunks: Default::default(),
             max_size: Default::default(),
+            chunks: Default::default(),
         }
     }
 }
