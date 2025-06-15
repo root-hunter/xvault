@@ -31,18 +31,6 @@
 
 ```
 
-```
-CA_UID = UIDv4()
-DEVICE_UID = UIDv4()
-
-USER_UID = UIDv5(CA_UID, USERNAME)
-VOLUME_UID = UIDv5(USER_UID, DEVICE_UID+ABS_PATH)
-
-FILE_UID = UIDv5(USER_UID, ABS_VIRTUAL_PATH)
-CHUNK_UID = UIDv5(FILE_UID, CHUNK_NUMBER)
-
-```
-
 ## 🙏 Acknowledgements
 
 This project uses various external datasets for testing and validation.
