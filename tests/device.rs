@@ -48,8 +48,6 @@ fn test_files(file_path: &str, compare: FnCompareFile) {
     let exports_path = Path::new(EXPORTS_FOLDER);
     let export_file_path = exports_path.join(file_path);
 
-    //let dev1 = Device::new(DEVIDE_UID.into());
-
     let vols = vec![VOL_PATH_1, VOL_PATH_2, VOL_PATH_3];
     for vol in vols {
         if let Err(_) = fs::remove_file(vol) {
