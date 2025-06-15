@@ -1,4 +1,5 @@
 test:
+	cargo build
 	cargo test --verbose
 
 run:
