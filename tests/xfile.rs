@@ -18,13 +18,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 mod utils;
 
 use std::{
-    fs::{self, File}, io::{BufReader, Read}, path::{Path, PathBuf}
+    fs::{self}, path::Path
 };
 
 use xvault::engine::xfile::XFile;
 use uuid::Uuid;
 
-use similar::{Algorithm, TextDiff};
 
 use utils::{compare_files_bin, compare_files_text, FnCompareFile};
 

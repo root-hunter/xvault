@@ -28,7 +28,7 @@ pub use uuid::Uuid;
 
 
 use crate::engine::{
-    chunk::{self, Chunk, ChunkHandler},
+    chunk::{Chunk, ChunkHandler},
     volume::Volume, xfile::{XFile, XFileChunks, XFileHandler, XFileQuery},
 };
 

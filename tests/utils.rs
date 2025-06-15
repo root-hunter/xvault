@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, File}, io::{BufReader, Read}, path::{Path, PathBuf}
+    fs::{self, File}, io::{BufReader, Read}, path::PathBuf
 };
 
 use similar::{Algorithm, TextDiff};

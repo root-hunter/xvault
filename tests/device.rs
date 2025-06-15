@@ -18,14 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 mod utils;
 
 use std::{
-    fs::{self, File}, io::{BufReader, Read}, path::{Path, PathBuf}
+    fs::{self}, path::Path
 };
 
 use rand::{rngs::StdRng, seq::{IndexedRandom, SliceRandom}, SeedableRng};
 use xvault::engine::{chunk::{ChunkHandler, CHUNK_SIZE}, device::Device, volume::Volume, xfile::{XFile, XFileHandler, XFileQuery}};
 use uuid::Uuid;
 
-use similar::{Algorithm, TextDiff};
 
 use utils::{compare_files_bin, compare_files_text, FnCompareFile};
 
