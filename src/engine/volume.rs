@@ -137,17 +137,23 @@ impl Volume {
 
 
 impl ChunkHandler for Volume {
+
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk> {
         return self.chunks.get(&uuid);
     }
 
-    fn add_chunk(&mut self, chunk: Chunk) {
+    fn add_chunk(&mut self, chunk: Chunk) -> Option<String> {
         self.chunks.insert(chunk.uid.clone(), chunk);
+        return Some(self.uid.clone());
     }
 
     fn add_chunks_from_file(&mut self, file: &mut XFile) {
         for chunk in file.chunks.clone() {
             self.add_chunk(chunk);
         }
+    }
+    
+    fn is_full(self) -> bool {
+        return self.chunks.len() >= self.max_size;
     }
 }

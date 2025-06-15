@@ -1,30 +1,29 @@
 [package]
 name = "xvault"
-version = "0.1.0"
 edition = "2024"
+version = "0.1.0"
+license = "GPL-3.0-or-later"
+authors = ["Antonio Ricciardi <dev.roothunter@gmail.com>"]
+repository = "https://github.com/root-hunter/xvault"
+categories = [
+    "filesystem",
+    "distributed-systems",
+    "data-structures",
+    "encoding",
+]
+keywords = [
+    "distributed",
+    "filesystem",
+    "chunks",
+    "redundancy",
+    "rust",
+]
 
 [dependencies]
 rand = "*"
-
-[dependencies.uuid]
-version = "1.17.0"
-# Lets you generate random UUIDs
-features = [
-    "v4",
-    "v5",
-]
-
-[dependencies.serde]
-version = "1.0"
-features = [
-    "derive"
-]
-
-[dependencies.bincode]
-version = "2.0.1"
-features = [
-    "serde"
-]
+uuid = { version = "1.13.0", features = ["v4", "v5"] }
+serde = { version = "1.0", features = ["derive"] }
+bincode = { version = "2.0.1", features = ["serde"] }
 
 [dev-dependencies]
 similar = "2.7.0"

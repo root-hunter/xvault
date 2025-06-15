@@ -12,9 +12,9 @@ use rand::SeedableRng;
 use rand::seq::{IndexedRandom, SliceRandom};
 
 fn main() {
-    const vol_path_1: &str = "./tmp/vol100.rootfs";
-    const vol_path_2: &str = "./tmp/vol200.rootfs";
-    const vol_path_3: &str = "./tmp/vol300.rootfs";
+    const vol_path_1: &str = "tmp/vol100.rootfs";
+    const vol_path_2: &str = "tmp/vol200.rootfs";
+    const vol_path_3: &str = "tmp/vol300.rootfs";
 
     let user_id = Uuid::parse_str(USER_UID).unwrap();
     let file_path_1 = Path::new("assets/text/README.md");
@@ -69,4 +69,7 @@ fn main() {
     vol1.save().unwrap();
     vol2.save().unwrap();
     vol3.save().unwrap();
+
+
+
 }
