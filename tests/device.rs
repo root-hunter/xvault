@@ -39,7 +39,7 @@ const VOL_PATH_3: &str = "./tmp/vol_test_device_300.rootfs";
 
 const RNG_SEED: u64 = 3;
 
-fn test_files(file_path: &str, compare: FnCompareFile) {
+fn test_file(file_path: &str, compare: FnCompareFile) {
     let vfolder = "/home";
     let assets_path = Path::new(ASSETS_FOLDER);
     let assets_file_path = assets_path.join(file_path);
@@ -134,34 +134,4 @@ fn test_files(file_path: &str, compare: FnCompareFile) {
 
     compare(&assets_file_path, &export_file_path);
 }
-
-macro_rules! generate_file_text_tests {
-    ($(($name:ident, $file1:expr)),* $(,)?) => {
-        $(
-            #[test]
-            fn $name() {
-                test_files($file1, compare_files_text);
-            }
-        )*
-    };
-}
-
-generate_file_text_tests! {
-    (device_file_text_1, "text/README.md"),
-    (device_file_text_2, "text/Satoshi_Nakamoto.html"),
-}
-
-macro_rules! generate_file_bin_tests {
-    ($(($name:ident, $file1:expr)),* $(,)?) => {
-        $(
-            #[test]
-            fn $name() {
-                test_files($file1, compare_files_bin);
-            }
-        )*
-    };
-}
-
-generate_file_bin_tests! {
-    (device_file_bin_1, "bin/Pac_2005.exe"),
-}
+include!(concat!(env!("OUT_DIR"), "/generated_device_tests.rs"));

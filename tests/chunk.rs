@@ -26,7 +26,7 @@ const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
 #[test]
 fn test_uids() {
     let user_id = Uuid::parse_str(USER_UID).unwrap();
-    let file_path_1 = Path::new("assets/text/README.md");
+    let file_path_1 = Path::new("assets/README.md");
     let vfolder = "home".to_string();
 
     let file = XFile::new(user_id, file_path_1, vfolder).unwrap();

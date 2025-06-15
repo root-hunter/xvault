@@ -34,7 +34,9 @@ const ASSETS_FOLDER: &str = "./assets";
 const EXPORTS_FOLDER: &str = "./exports/test_xfile";
 const VOL_PATH: &str = "./tmp/vol100.rootfs";
 
-fn test_files(file_path: &str, compare: FnCompareFile) {
+fn test_file(file_path: &str, compare: FnCompareFile) {
+    println!("Testing file: {}", file_path);
+
     let vfolder = "/home";
     let assets_path = Path::new(ASSETS_FOLDER);
     let assets_file_path = assets_path.join(file_path);
@@ -60,33 +62,4 @@ fn test_files(file_path: &str, compare: FnCompareFile) {
     compare(&assets_file_path, &export_file_path);
 }
 
-macro_rules! generate_file_text_tests {
-    ($(($name:ident, $file1:expr)),* $(,)?) => {
-        $(
-            #[test]
-            fn $name() {
-                test_files($file1, compare_files_text);
-            }
-        )*
-    };
-}
-
-generate_file_text_tests! {
-    (xfile_file_text_1, "text/README.md"),
-    (xfile_file_text_2, "text/Satoshi_Nakamoto.html"),
-}
-
-macro_rules! generate_file_bin_tests {
-    ($(($name:ident, $file1:expr)),* $(,)?) => {
-        $(
-            #[test]
-            fn $name() {
-                test_files($file1, compare_files_bin);
-            }
-        )*
-    };
-}
-
-generate_file_bin_tests! {
-    (xfile_file_bin_1, "bin/Pac_2005.exe"),
-}
+include!(concat!(env!("OUT_DIR"), "/generated_xfile_tests.rs"));
