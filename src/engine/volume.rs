@@ -25,7 +25,10 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{chunk::{Chunk, ChunkHandler}, xfile::XFile};
+use crate::engine::{
+    chunk::{Chunk, ChunkHandler},
+    xfile::XFile,
+};
 
 pub type VolumeChunks = HashMap<String, Chunk>;
 
@@ -33,6 +36,7 @@ pub type VolumeChunks = HashMap<String, Chunk>;
 pub enum Error {
     FileNotExists,
     IO(io::Error),
+    Encode(bincode::error::EncodeError),
 }
 
 #[derive(Decode, Encode)]
@@ -62,7 +66,7 @@ impl Volume {
             } else {
                 fs::canonicalize(path_str.clone()).unwrap_or_else(|_| path.to_path_buf())
             };
-            
+
             if !exists.unwrap() {
                 let res = fs::File::create(path);
 
@@ -71,16 +75,14 @@ impl Volume {
                 }
             }
 
-            let volume_uid = Uuid::new_v5(
-                &Uuid::parse_str(&device_uid).unwrap(),
-                path_str.as_bytes(),
-            );
+            let volume_uid =
+                Uuid::new_v5(&Uuid::parse_str(&device_uid).unwrap(), path_str.as_bytes());
 
             return Ok(Volume {
                 path: abs_path.to_string_lossy().to_string(),
                 chunks: HashMap::new(),
                 uid: volume_uid.to_string(),
-                max_size
+                max_size,
             });
         }
     }
@@ -101,19 +103,22 @@ impl Volume {
                 if let Ok(mut fp) = fp {
                     let mut buffer = [0u8; 4096 * 10];
 
-                    let length = bincode::encode_into_slice(
+                    let res_length = bincode::encode_into_slice(
                         VolumeWrap { data: self.clone() },
                         &mut buffer,
                         bincode::config::standard(),
-                    )
-                    .unwrap();
+                    );
 
-                    let res = fp.write(&buffer[..length]);
+                    if let Ok(length) = res_length {
+                        let res = fp.write(&buffer[..length]);
 
-                    if let Ok(_) = res {
-                        return Ok(());
+                        if let Ok(_) = res {
+                            return Ok(());
+                        } else {
+                            return Err(Error::IO(res.unwrap_err()));
+                        }
                     } else {
-                        return Err(Error::IO(res.unwrap_err()));
+                        return Err(Error::Encode(res_length.unwrap_err()));
                     }
                 } else {
                     return Err(Error::IO(fp.unwrap_err()));
@@ -137,9 +142,7 @@ impl Volume {
     }
 }
 
-
 impl ChunkHandler for Volume {
-
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk> {
         return self.chunks.get(&uuid);
     }
@@ -154,7 +157,7 @@ impl ChunkHandler for Volume {
             self.add_chunk(chunk);
         }
     }
-    
+
     fn is_full(self) -> bool {
         return self.chunks.len() >= self.max_size;
     }
