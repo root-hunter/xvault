@@ -101,11 +101,12 @@ impl Volume {
             return Err(exists.unwrap_err());
         } else {
             let path = Path::new(&path_str);
-            let abs_path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                fs::canonicalize(path_str.clone()).unwrap_or_else(|_| path.to_path_buf())
-            };
+            if !path.is_absolute() {
+                let path = fs::canonicalize(path_str.clone()).unwrap_or_else(|_| path.to_path_buf());
+                let path = path.to_str().unwrap_or("").to_string();
+
+                self.set_path(path);
+            }
 
             if !exists.unwrap() {
                 let res = fs::File::create(path);
