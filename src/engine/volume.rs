@@ -67,7 +67,11 @@ impl Volume {
     }
 
     pub fn set_uid(&mut self, device_uid: String) -> &mut Self {
+        assert!(!device_uid.is_empty(), "Device UID cannot be empty");
+
         let path_str = self.path.clone();
+        assert!(!path_str.is_empty(), "Volume path cannot be empty");
+
         let device_uid = Uuid::parse_str(&device_uid).unwrap();
         let volume_uid = Uuid::new_v5(&device_uid, path_str.as_bytes());
 
