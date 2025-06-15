@@ -28,6 +28,10 @@ pub use uuid::Uuid;
 
 use crate::engine::{chunk::{Chunk, ChunkHandler}, volume};
 
+const OFFSET_VOLUME_UID: u64 = 0;
+const OFFSET_MAX_SIZE: u64 = OFFSET_VOLUME_UID + 16;
+const OFFSET_ACTUAL_SIZE: u64 = OFFSET_MAX_SIZE + 8;
+
 //pub type VolumeChunkOffset = [u8; 2];
 pub type ChunkOffset = [u8; 2];
 pub type VolumeOffsets = HashMap<String, ChunkOffset>;
@@ -102,7 +106,7 @@ impl Volume {
 
         let file = file.unwrap();
         let mut buf = [0u8; 16];
-        if let Err(err) = file.read_exact_at(&mut buf, 8) {
+        if let Err(err) = file.read_exact_at(&mut buf, OFFSET_VOLUME_UID) {
             return Err(Error::IO(err));
         }
 
@@ -138,7 +142,7 @@ impl Volume {
 
         let file = file.unwrap();
         let mut buf = [0u8; 8]; // u64 size
-        if let Err(err) = file.read_exact_at(&mut buf, 16) {
+        if let Err(err) = file.read_exact_at(&mut buf, OFFSET_MAX_SIZE) {
             return Err(Error::IO(err));
         }
 
