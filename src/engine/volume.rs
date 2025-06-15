@@ -25,9 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{
-    chunk::{Chunk, ChunkHandler},
-};
+use crate::engine::chunk::{Chunk, ChunkHandler};
 
 pub type VolumeChunks = HashMap<String, Chunk>;
 
@@ -52,8 +50,44 @@ pub struct Volume {
     pub max_size: usize,
 }
 
+impl Default for Volume {
+    fn default() -> Self {
+        Self {
+            uid: Default::default(),
+            path: Default::default(),
+            chunks: Default::default(),
+            max_size: Default::default(),
+        }
+    }
+}
+
 impl Volume {
-    pub fn new(device_uid: String, path_str: String, max_size: usize) -> Result<Self, io::Error> {
+    pub fn new() -> Self {
+        return Self::default();
+    }
+
+    pub fn set_uid(&mut self, device_uid: String) -> &mut Self {
+        let path_str = self.path.clone();
+        let device_uid = Uuid::parse_str(&device_uid).unwrap();
+        let volume_uid = Uuid::new_v5(&device_uid, path_str.as_bytes());
+
+        self.uid = volume_uid.to_string();
+        return self;
+    }
+
+    pub fn set_path(&mut self, path: String) -> &mut Self {
+        self.path = path;
+        return self;
+    }
+
+    pub fn set_max_size(&mut self, max_size: usize) -> &mut Self {
+        self.max_size = max_size;
+        return self;
+    }
+
+    pub fn build(&mut self) -> Result<&mut Self, io::Error> {
+        let path_str = self.path.clone();
+
         let exists = fs::exists(path_str.clone());
 
         if exists.is_err() {
@@ -74,15 +108,7 @@ impl Volume {
                 }
             }
 
-            let volume_uid =
-                Uuid::new_v5(&Uuid::parse_str(&device_uid).unwrap(), path_str.as_bytes());
-
-            return Ok(Volume {
-                path: abs_path.to_string_lossy().to_string(),
-                chunks: HashMap::new(),
-                uid: volume_uid.to_string(),
-                max_size,
-            });
+            return Ok(self);
         }
     }
 
