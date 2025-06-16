@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 pub use bincode::{Decode, Encode};
+use rand::rand_core::le;
 use serde::de::value;
 pub use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::OpenOptions, io::Write, os::unix::fs::FileExt};
@@ -26,7 +27,10 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{chunk::{Chunk, ChunkHandler}, volume};
+use crate::engine::{
+    chunk::{Chunk, ChunkHandler},
+    volume,
+};
 
 const OFFSET_VOLUME_UID: u64 = 0;
 const OFFSET_MAX_SIZE: u64 = OFFSET_VOLUME_UID + 16;
@@ -97,7 +101,7 @@ impl Volume {
         return self;
     }
 
-    pub fn set_uid_from_disk(&mut self) -> Result<(), Error> {
+    pub fn get_uid_from_disk(&mut self) -> Result<String, Error> {
         let file = OpenOptions::new().read(true).open(&self.path);
 
         if let Err(err) = file {
@@ -112,6 +116,11 @@ impl Volume {
 
         let volume_uid = Uuid::from_bytes_le(buf);
         let volume_uid = volume_uid.to_string();
+        return Ok(volume_uid);
+    }
+
+    pub fn set_uid_from_disk(&mut self) -> Result<(), Error> {
+        let volume_uid = self.get_uid_from_disk()?;
 
         self.set_uid(volume_uid);
         return Ok(());
@@ -128,12 +137,15 @@ impl Volume {
         return self;
     }
 
-    pub fn set_max_size(&mut self, max_size: u64) -> &mut Self {
-        self.max_size = max_size;
-        return self;
+    pub fn get_actual_size(&self) -> u64 {
+        return self.chunks.len() as u64;
     }
 
-    pub fn set_max_size_from_disk(&mut self) -> Result<(), Error> {
+    pub fn get_max_size(&self) -> u64 {
+        return self.max_size;
+    }
+
+    pub fn get_max_size_from_disk(&mut self) -> Result<u64, Error> {
         let file = OpenOptions::new().read(true).open(&self.path);
 
         if let Err(err) = file {
@@ -154,6 +166,16 @@ impl Volume {
             .unwrap()
             .0;
 
+        return Ok(max_size);
+    }
+
+    pub fn set_max_size(&mut self, max_size: u64) -> &mut Self {
+        self.max_size = max_size;
+        return self;
+    }
+
+    pub fn set_max_size_from_disk(&mut self) -> Result<(), Error> {
+        let max_size = self.get_max_size_from_disk()?;
         self.set_max_size(max_size);
 
         return Ok(());
@@ -167,45 +189,6 @@ impl Volume {
         //self.create_on_disk().unwrap();
 
         return Ok(self);
-    }
-
-    pub fn get_max_size(&self) -> usize {
-        return self.chunks.len();
-    }
-
-    pub fn write_map_offsets(&mut self) -> Result<(), Error> {
-        let path_str = self.path.clone();
-        let exists = fs::exists(path_str.clone());
-
-        if exists.is_err() {
-            return Err(Error::IO(exists.unwrap_err()));
-        } else {
-            if exists.unwrap() {
-                let res = OpenOptions::new().read(true).write(true).open(path_str);
-
-                if let Err(err) = res {
-                    return Err(Error::IO(err));
-                }
-
-                let mut file = res.unwrap();
-                let config = bincode::config::standard()
-                    .with_little_endian()
-                    .with_fixed_int_encoding();
-
-                for (uid, offset) in &self.offsets {
-                    let uid_bytes = bincode::encode_to_vec(uid, config).map_err(Error::Encode)?;
-                    let offset_bytes =
-                        bincode::encode_to_vec(offset, config).map_err(Error::Encode)?;
-
-                    file.write_all(&uid_bytes).unwrap();
-                    file.write_all(&offset_bytes).unwrap();
-                }
-
-                return Ok(());
-            } else {
-                return Err(Error::FileNotExists);
-            }
-        }
     }
 
     pub fn alloc_on_disk(&mut self) -> Result<(), Error> {
@@ -234,7 +217,6 @@ impl Volume {
                 if let Err(err) = res {
                     return Err(Error::IO(err));
                 }
-
 
                 let mut file = res.unwrap();
                 let config = bincode::config::standard()
