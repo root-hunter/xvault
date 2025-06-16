@@ -34,7 +34,6 @@ const OFFSET_MAX_SIZE: u64 = OFFSET_VOLUME_UID + 16;
 const OFFSET_ACTUAL_SIZE: u64 = OFFSET_MAX_SIZE + 8;
 const OFFSET_MAP_OFFSETS: u64 = OFFSET_ACTUAL_SIZE + 8;
 
-
 //pub type VolumeChunkOffset = [u8; 2];
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ChunkOffset {
@@ -63,7 +62,7 @@ pub enum Error {
     IO(io::Error),
     Encode(bincode::error::EncodeError),
     Decode(bincode::error::DecodeError),
-    Chunk(chunk::Error)
+    Chunk(chunk::Error),
 }
 
 #[derive(Decode, Encode)]
@@ -262,7 +261,6 @@ impl Volume {
         }
     }
 
-
     pub fn write_offsets_to_file(&self, file: &File) -> Result<(), io::Error> {
         let config = bincode::config::standard()
             .with_little_endian()
@@ -270,12 +268,17 @@ impl Volume {
 
         let mut index = OFFSET_MAP_OFFSETS;
 
-
         for (uid, offset) in &self.offsets {
             let uid_bytes = Uuid::parse_str(uid).unwrap().to_bytes_le();
-            let offset_start = bincode::encode_to_vec(offset.start, config).map_err(Error::Encode).unwrap();
-            let offset_end = bincode::encode_to_vec(offset.end, config).map_err(Error::Encode).unwrap();
-            let offset_is_final = bincode::encode_to_vec(offset.is_final, config).map_err(Error::Encode).unwrap();
+            let offset_start = bincode::encode_to_vec(offset.start, config)
+                .map_err(Error::Encode)
+                .unwrap();
+            let offset_end = bincode::encode_to_vec(offset.end, config)
+                .map_err(Error::Encode)
+                .unwrap();
+            let offset_is_final = bincode::encode_to_vec(offset.is_final, config)
+                .map_err(Error::Encode)
+                .unwrap();
 
             if let Err(err) = file.write_all_at(&uid_bytes, index) {
                 return Err(err);
@@ -323,16 +326,36 @@ impl ChunkHandler for Volume {
         return self.chunks.len() >= self.max_size as usize;
     }
 
-    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Option<&Chunk> {
-        todo!()
+    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, io::Error> {
+        let offset = self.offsets.get(&uuid);
+
+        if offset.is_none() {
+            return Ok(None);
+        } else {
+            let offset = offset.unwrap();
+            let mut buf = vec![0u8; (offset.end - offset.start) as usize];
+            file.read_at(buf.as_mut_slice(), offset.start).unwrap();
+
+            let buf_len = buf.len();
+            let chunk = Chunk {
+                uid: uuid,
+                data: buf,
+                length: if offset.is_final { Some(buf_len) } else { None },
+            };
+
+            return Ok(Some(chunk));
+        }
     }
 
     fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, io::Error> {
         let chunk_uid = chunk.uid.clone();
 
         let offsets = self.offsets.clone();
-        let head_chunks = offsets.values()
-            .map(|x| x.clone().end).max().unwrap_or(OFFSET_MAP_OFFSETS);
+        let head_chunks = offsets
+            .values()
+            .map(|x| x.clone().end)
+            .max()
+            .unwrap_or(OFFSET_MAP_OFFSETS);
 
         println!("Head chunks offset: {}", head_chunks);
 

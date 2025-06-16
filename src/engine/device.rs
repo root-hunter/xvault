@@ -87,7 +87,7 @@ impl ChunkHandler for Device {
         return self.volumes.values().all(|v| v.clone().is_full());
     }
     
-    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Option<&Chunk> {
+    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, io::Error> {
         todo!()
     }
     

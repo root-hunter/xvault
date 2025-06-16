@@ -53,7 +53,7 @@ pub trait ChunkHandler {
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk>;
     fn add_chunk(&mut self, chunk: Chunk) -> Option<String>;
 
-    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Option<&Chunk>;
+    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, io::Error>;
     fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, io::Error>;
 
     fn add_chunks_from_file(&mut self, file: &mut XFile) {

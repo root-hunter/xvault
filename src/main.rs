@@ -9,7 +9,7 @@ const VOL_PATH: &str = "./tmp/vol10002.rootfs";
 
 fn main() {
     let vfolder = "vfolder1";
-    let file_path = "assets/large/bible.txt";
+    let file_path = "assets/canterbury/plrabn12.txt";
     let file_path = std::path::Path::new(file_path);
 
     let user_uid = Uuid::parse_str(USER_UID).unwrap();
@@ -43,6 +43,17 @@ fn main() {
             vol1.add_chunk_v2(&fp, chunk).unwrap();
         }
         vol1.write_offsets_to_file(&fp).unwrap();
+
+        let chunk = vol1.get_chunk_v2(&fp, "77fbdccf-e7d0-5bb9-98d6-60d1f063f01c".into()).unwrap();
+
+
+        if let Some(chunk) = chunk {
+            println!("Retrieved Chunk UID: {}, Length: {:?}", chunk.uid, chunk.length);
+            println!("Chunk Data: {:?}", String::from_utf8(chunk.data));
+        } else {
+            println!("Chunk not found");
+        }
+
     } else {
         println!("Failed to create XFile");
     }
