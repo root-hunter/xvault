@@ -9,7 +9,7 @@ const VOL_PATH: &str = "./tmp/vol10002.rootfs";
 
 fn main() {
     let vfolder = "vfolder1";
-    let file_path = "assets/README.md";
+    let file_path = "assets/large/bible.txt";
     let file_path = std::path::Path::new(file_path);
 
     let user_uid = Uuid::parse_str(USER_UID).unwrap();
@@ -18,8 +18,6 @@ fn main() {
     let vol_path = VOL_PATH.to_string();
 
     fs::remove_file(vol_path.clone()).unwrap_or(());
-
-
 
     if let Ok(mut file) = file {
         let mut vol1 = Volume::new();
@@ -32,6 +30,19 @@ fn main() {
         vol1.alloc_on_disk().unwrap();
 
         vol1.add_chunks_from_file(&mut file);
+
+        let fp = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(vol1.path.clone())
+            .expect("Failed to open volume file");
+
+        for (uid, chunk) in vol1.chunks.clone() {
+            println!("Chunk UID: {}, Length: {:?}", chunk.uid, chunk.length);
+
+            vol1.add_chunk_v2(&fp, chunk).unwrap();
+        }
+        vol1.write_offsets_to_file(&fp).unwrap();
     } else {
         println!("Failed to create XFile");
     }

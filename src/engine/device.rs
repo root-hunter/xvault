@@ -86,6 +86,16 @@ impl ChunkHandler for Device {
     fn is_full(self) -> bool {
         return self.volumes.values().all(|v| v.clone().is_full());
     }
+    
+    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Option<&Chunk> {
+        todo!()
+    }
+    
+    fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, io::Error> {
+        todo!()
+    }
+    
+    
 }
 
 impl XFileHandler for Device {
