@@ -27,17 +27,30 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{
-    chunk::{Chunk, ChunkHandler},
-    volume,
-};
+use crate::engine::chunk::{Chunk, ChunkHandler};
 
 const OFFSET_VOLUME_UID: u64 = 0;
 const OFFSET_MAX_SIZE: u64 = OFFSET_VOLUME_UID + 16;
 const OFFSET_ACTUAL_SIZE: u64 = OFFSET_MAX_SIZE + 8;
 
 //pub type VolumeChunkOffset = [u8; 2];
-pub type ChunkOffset = [u8; 2];
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ChunkOffset {
+    pub start: u64,
+    pub end: u64,
+    pub is_final: bool,
+}
+
+impl Default for ChunkOffset {
+    fn default() -> Self {
+        Self {
+            start: 0,
+            end: 0,
+            is_final: false,
+        }
+    }
+}
+
 pub type VolumeOffsets = HashMap<String, ChunkOffset>;
 pub type VolumeChunks = HashMap<String, Chunk>;
 
@@ -59,10 +72,10 @@ struct VolumeWrap {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Volume {
     pub uid: String,
+    pub max_size: u64,
     pub path: String,
     pub chunks: VolumeChunks,
     pub offsets: VolumeOffsets,
-    pub max_size: u64,
 }
 
 impl Default for Volume {
@@ -80,6 +93,16 @@ impl Default for Volume {
 impl Volume {
     pub fn new() -> Self {
         return Self::default();
+    }
+
+    pub fn build(&mut self) -> Result<&mut Self, io::Error> {
+        assert!(self.max_size > 0, "Volume max_size cannot be 0");
+        assert!(!self.path.is_empty(), "Volume path cannot be empty");
+        assert!(!self.uid.is_empty(), "Volume uid cannot be empty");
+
+        //self.create_on_disk().unwrap();
+
+        return Ok(self);
     }
 
     pub fn set_uid_from_device(&mut self, device_uid: String) -> &mut Self {
@@ -101,14 +124,8 @@ impl Volume {
         return self;
     }
 
-    pub fn get_uid_from_disk(&mut self) -> Result<String, Error> {
-        let file = OpenOptions::new().read(true).open(&self.path);
 
-        if let Err(err) = file {
-            return Err(Error::IO(err));
-        }
-
-        let file = file.unwrap();
+    pub fn read_uid_from_file(&mut self, file: &File) -> Result<String, Error> {
         let mut buf = [0u8; 16];
         if let Err(err) = file.read_exact_at(&mut buf, OFFSET_VOLUME_UID) {
             return Err(Error::IO(err));
@@ -119,8 +136,8 @@ impl Volume {
         return Ok(volume_uid);
     }
 
-    pub fn set_uid_from_disk(&mut self) -> Result<(), Error> {
-        let volume_uid = self.get_uid_from_disk()?;
+    pub fn set_uid_from_file(&mut self, file: &File) -> Result<(), Error> {
+        let volume_uid = self.read_uid_from_file(file)?;
 
         self.set_uid(volume_uid);
         return Ok(());
@@ -145,14 +162,7 @@ impl Volume {
         return self.max_size;
     }
 
-    pub fn get_max_size_from_disk(&mut self) -> Result<u64, Error> {
-        let file = OpenOptions::new().read(true).open(&self.path);
-
-        if let Err(err) = file {
-            return Err(Error::IO(err));
-        }
-
-        let file = file.unwrap();
+    pub fn read_max_size_from_file(&mut self, file: &File) -> Result<u64, Error> {
         let mut buf = [0u8; 8]; // u64 size
         if let Err(err) = file.read_exact_at(&mut buf, OFFSET_MAX_SIZE) {
             return Err(Error::IO(err));
@@ -174,21 +184,11 @@ impl Volume {
         return self;
     }
 
-    pub fn set_max_size_from_disk(&mut self) -> Result<(), Error> {
-        let max_size = self.get_max_size_from_disk()?;
+    pub fn set_max_size_from_disk(&mut self, file: &File) -> Result<(), Error> {
+        let max_size = self.read_max_size_from_file(file)?;
         self.set_max_size(max_size);
 
         return Ok(());
-    }
-
-    pub fn build(&mut self) -> Result<&mut Self, io::Error> {
-        assert!(self.max_size > 0, "Volume max_size cannot be 0");
-        assert!(!self.path.is_empty(), "Volume path cannot be empty");
-        assert!(!self.uid.is_empty(), "Volume uid cannot be empty");
-
-        //self.create_on_disk().unwrap();
-
-        return Ok(self);
     }
 
     pub fn alloc_on_disk(&mut self) -> Result<(), Error> {
@@ -207,7 +207,9 @@ impl Volume {
                 self.set_path(path);
             }
 
-            if !exists.unwrap() {
+            let exists = exists.unwrap();
+
+            if !exists {
                 let res = OpenOptions::new()
                     .read(true)
                     .write(true)
@@ -259,16 +261,6 @@ impl Volume {
             } else {
                 return Err(Error::VolumeAlreadyAllocated);
             }
-        }
-    }
-
-    fn exists(&mut self) -> Result<bool, Error> {
-        let exists = fs::exists(self.path.clone());
-
-        if let Ok(exists) = exists {
-            return Ok(exists);
-        } else {
-            return Err(Error::IO(exists.unwrap_err()));
         }
     }
 }

@@ -1,4 +1,4 @@
-use std::fs;
+use std::fs::{self, OpenOptions};
 use xvault::engine::{volume::Volume};
 
 #[test]
@@ -17,9 +17,12 @@ fn volume_test_set_max_size_from_disk() {
     fs::remove_file(vol_path).unwrap_or(());
     volume.alloc_on_disk().unwrap();
 
+    let file = OpenOptions::new().read(true).open(&vol_path);
+    let file = file.unwrap();
+
     // Now read it back
-    assert!(volume.set_max_size_from_disk().is_ok());
-    assert_eq!(volume.max_size, max_size);
+    assert!(volume.set_max_size_from_disk(&file).is_ok());
+    assert_eq!(volume.get_max_size(), max_size);
 }
 
 #[test]
@@ -39,8 +42,11 @@ fn volume_test_set_uid_from_disk() {
     fs::remove_file(vol_path).unwrap_or(());
     volume.alloc_on_disk().unwrap();
 
+    let file = OpenOptions::new().read(true).open(&vol_path);
+    let file = file.unwrap();
+    
     // Now read it back
-    assert!(volume.set_uid_from_disk().is_ok());
+    assert!(volume.set_uid_from_file(&file).is_ok());
     assert!(!volume.uid.is_empty());
     assert_eq!(volume.uid, volume_uid);
 }
