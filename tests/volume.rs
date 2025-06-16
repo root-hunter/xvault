@@ -22,7 +22,7 @@ fn volume_test_set_max_size_from_disk() {
 
     // Now read it back
     assert!(volume.set_max_size_from_disk(&file).is_ok());
-    assert_eq!(volume.get_max_size(), max_size);
+    assert_eq!(volume.max_size, max_size);
 }
 
 #[test]

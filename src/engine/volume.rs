@@ -124,7 +124,6 @@ impl Volume {
         return self;
     }
 
-
     pub fn read_uid_from_file(&mut self, file: &File) -> Result<String, Error> {
         let mut buf = [0u8; 16];
         if let Err(err) = file.read_exact_at(&mut buf, OFFSET_VOLUME_UID) {
@@ -156,10 +155,6 @@ impl Volume {
 
     pub fn get_actual_size(&self) -> u64 {
         return self.chunks.len() as u64;
-    }
-
-    pub fn get_max_size(&self) -> u64 {
-        return self.max_size;
     }
 
     pub fn read_max_size_from_file(&mut self, file: &File) -> Result<u64, Error> {
@@ -233,7 +228,7 @@ impl Volume {
                 let max_size =
                     bincode::encode_to_vec(&self.max_size, config).map_err(Error::Encode)?;
 
-                let actual_size = self.get_max_size();
+                let actual_size = self.get_actual_size();
                 let actual_size =
                     bincode::encode_to_vec(&actual_size, config).map_err(Error::Encode)?;
 
