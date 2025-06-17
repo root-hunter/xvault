@@ -25,7 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::chunk::{self, Chunk, ChunkHandler};
+use crate::engine::{chunk::{self, Chunk, ChunkHandler}, error::XVaultError};
 
 const OFFSET_VOLUME_UID: u64 = 0;
 const OFFSET_MAX_SIZE: u64 = OFFSET_VOLUME_UID + 16;
@@ -47,16 +47,6 @@ impl Default for ChunkOffset {
 
 pub type VolumeOffsets = HashMap<String, ChunkOffset>;
 pub type VolumeChunks = HashMap<String, Chunk>;
-
-#[derive(Debug)]
-pub enum Error {
-    FileNotExists,
-    VolumeAlreadyAllocated,
-    IO(io::Error),
-    Encode(bincode::error::EncodeError),
-    Decode(bincode::error::DecodeError),
-    Chunk(chunk::Error),
-}
 
 #[derive(Decode, Encode)]
 struct VolumeWrap {
@@ -90,7 +80,7 @@ impl Volume {
         return Self::default();
     }
 
-    pub fn build(&mut self) -> Result<&mut Self, io::Error> {
+    pub fn build(&mut self) -> Result<&mut Self, XVaultError> {
         assert!(self.max_size > 0, "Volume max_size cannot be 0");
         assert!(!self.path.is_empty(), "Volume path cannot be empty");
         assert!(!self.uid.is_empty(), "Volume uid cannot be empty");
@@ -119,10 +109,10 @@ impl Volume {
         return self;
     }
 
-    pub fn read_uid_from_file(&mut self, file: &File) -> Result<String, Error> {
+    pub fn read_uid_from_file(&mut self, file: &File) -> Result<String, XVaultError> {
         let mut buf = [0u8; 16];
         if let Err(err) = file.read_exact_at(&mut buf, OFFSET_VOLUME_UID) {
-            return Err(Error::IO(err));
+            return Err(XVaultError::IO(err));
         }
 
         let volume_uid = Uuid::from_bytes_le(buf);
@@ -130,7 +120,7 @@ impl Volume {
         return Ok(volume_uid);
     }
 
-    pub fn set_uid_from_file(&mut self, file: &File) -> Result<(), Error> {
+    pub fn set_uid_from_file(&mut self, file: &File) -> Result<(), XVaultError> {
         let volume_uid = self.read_uid_from_file(file)?;
 
         self.set_uid(volume_uid);
@@ -152,34 +142,34 @@ impl Volume {
         return self.chunks.len() as u64;
     }
 
-    pub fn read_max_size_from_file(&mut self, file: &File) -> Result<u64, Error> {
+    pub fn read_max_size_from_file(&mut self, file: &File) -> Result<u64, XVaultError> {
         let mut buf = [0u8; 8]; // u64 size
         if let Err(err) = file.read_exact_at(&mut buf, OFFSET_MAX_SIZE) {
-            return Err(Error::IO(err));
+            return Err(XVaultError::IO(err));
         }
 
         let config = bincode::config::standard()
             .with_little_endian()
             .with_fixed_int_encoding();
         let max_size: u64 = bincode::decode_from_slice(&buf, config)
-            .map_err(Error::Decode)
+            .map_err(XVaultError::Decode)
             .unwrap()
             .0;
 
         return Ok(max_size);
     }
 
-    pub fn read_actual_size_from_file(&mut self, file: &File) -> Result<u64, Error> {
+    pub fn read_actual_size_from_file(&mut self, file: &File) -> Result<u64, XVaultError> {
         let mut buf = [0u8; 8]; // u64 size
         if let Err(err) = file.read_exact_at(&mut buf, OFFSET_ACTUAL_SIZE) {
-            return Err(Error::IO(err));
+            return Err(XVaultError::IO(err));
         }
 
         let config = bincode::config::standard()
             .with_little_endian()
             .with_fixed_int_encoding();
         let actual_size: u64 = bincode::decode_from_slice(&buf, config)
-            .map_err(Error::Decode)
+            .map_err(XVaultError::Decode)
             .unwrap()
             .0;
 
@@ -191,19 +181,19 @@ impl Volume {
         return self;
     }
 
-    pub fn set_max_size_from_disk(&mut self, file: &File) -> Result<(), Error> {
+    pub fn set_max_size_from_disk(&mut self, file: &File) -> Result<(), XVaultError> {
         let max_size = self.read_max_size_from_file(file)?;
         self.set_max_size(max_size);
 
         return Ok(());
     }
 
-    pub fn alloc_on_disk(&mut self) -> Result<(), Error> {
+    pub fn alloc_on_disk(&mut self) -> Result<(), XVaultError> {
         let path_str = self.path.clone();
         let exists = fs::exists(path_str.clone());
 
         if exists.is_err() {
-            return Err(Error::IO(exists.unwrap_err()));
+            return Err(XVaultError::IO(exists.unwrap_err()));
         } else {
             let path = Path::new(&path_str);
             if !path.is_absolute() {
@@ -224,7 +214,7 @@ impl Volume {
                     .open(path);
 
                 if let Err(err) = res {
-                    return Err(Error::IO(err));
+                    return Err(XVaultError::IO(err));
                 }
 
                 let mut file = res.unwrap();
@@ -238,11 +228,11 @@ impl Volume {
                 file.write_all(&volume_uid).unwrap();
 
                 let max_size =
-                    bincode::encode_to_vec(&self.max_size, config).map_err(Error::Encode)?;
+                    bincode::encode_to_vec(&self.max_size, config).map_err(XVaultError::Encode)?;
 
                 let actual_size = self.get_actual_size();
                 let actual_size =
-                    bincode::encode_to_vec(&actual_size, config).map_err(Error::Encode)?;
+                    bincode::encode_to_vec(&actual_size, config).map_err(XVaultError::Encode)?;
 
                 println!("max_size length: {}", max_size.len());
                 println!("actual_size length: {}", actual_size.len());
@@ -266,12 +256,12 @@ impl Volume {
 
                 return Ok(());
             } else {
-                return Err(Error::VolumeAlreadyAllocated);
+                return Err(XVaultError::VolumeAlreadyAllocated);
             }
         }
     }
 
-    pub fn write_offsets_to_file(&self, file: &File) -> Result<(), io::Error> {
+    pub fn write_offsets_to_file(&self, file: &File) -> Result<(), XVaultError> {
         let config = bincode::config::standard()
             .with_little_endian()
             .with_fixed_int_encoding();
@@ -281,36 +271,36 @@ impl Volume {
 
         // Write the actual size of the offsets map
         let actual_size = bincode::encode_to_vec(count, config)
-            .map_err(Error::Encode)
+            .map_err(XVaultError::Encode)
             .unwrap();
         if let Err(err) = file.write_all_at(&actual_size, OFFSET_ACTUAL_SIZE) {
-            return Err(err);
+            return Err(XVaultError::IO(err));
         }
 
 
         for (uid, offset) in &self.offsets {
             let uid_bytes = Uuid::parse_str(uid).unwrap().to_bytes_le();
             let offset_start = bincode::encode_to_vec(offset.start, config)
-                .map_err(Error::Encode)
+                .map_err(XVaultError::Encode)
                 .unwrap();
             let offset_end = bincode::encode_to_vec(offset.end, config)
-                .map_err(Error::Encode)
+                .map_err(XVaultError::Encode)
                 .unwrap();
 
             if let Err(err) = file.write_all_at(&uid_bytes, index) {
-                return Err(err);
+                return Err(XVaultError::IO(err));
             }
 
             index += 16; // UID size
 
             if let Err(err) = file.write_all_at(&offset_start, index) {
-                return Err(err);
+                return Err(XVaultError::IO(err));
             }
 
             index += 8; // start u64 size
 
             if let Err(err) = file.write_all_at(&offset_end, index) {
-                return Err(err);
+                return Err(XVaultError::IO(err));
             }
 
             index += 8; // end u64 size
@@ -319,7 +309,7 @@ impl Volume {
         Ok(())
     }
 
-    pub fn read_offsets_from_file(&mut self, file: &File) -> Result<VolumeOffsets, Error> {
+    pub fn read_offsets_from_file(&mut self, file: &File) -> Result<VolumeOffsets, XVaultError> {
         let mut offsets = VolumeOffsets::new();
         
         let actual_size = self.read_actual_size_from_file(file)?;
@@ -346,12 +336,12 @@ impl Volume {
 
             let chunk_uid = Uuid::from_bytes_le(chunk_uid_buf).to_string();
             let chunk_start: u64 = bincode::decode_from_slice(&chunk_start, config)
-                .map_err(Error::Decode)
+                .map_err(XVaultError::Decode)
                 .unwrap()
                 .0;
 
             let chunk_end: u64 = bincode::decode_from_slice(&chunk_end, config)
-                .map_err(Error::Decode)
+                .map_err(XVaultError::Decode)
                 .unwrap()
                 .0;
 
@@ -362,7 +352,7 @@ impl Volume {
     }
 
 
-    pub fn set_offsets_from_file(&mut self, file: &File) -> Result<(), Error> {
+    pub fn set_offsets_from_file(&mut self, file: &File) -> Result<(), XVaultError> {
         let offsets = self.read_offsets_from_file(file)?;
         self.offsets = offsets.clone();
         return Ok(());
@@ -387,7 +377,7 @@ impl ChunkHandler for Volume {
         return self.chunks.len() >= self.max_size as usize;
     }
 
-    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, io::Error> {
+    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, XVaultError> {
         let offset = self.offsets.get(&uuid);
 
         if offset.is_none() {
@@ -409,7 +399,7 @@ impl ChunkHandler for Volume {
         }
     }
 
-    fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, io::Error> {
+    fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XVaultError> {
         let chunk_uid = chunk.uid.clone();
 
         let offsets = self.offsets.clone();

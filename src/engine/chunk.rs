@@ -25,15 +25,9 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::xfile::XFile;
+use crate::engine::{error::XVaultError, xfile::XFile};
 
 pub const CHUNK_SIZE: usize = 512;
-
-#[derive(Debug)]
-pub enum Error {
-    FileNotExists,
-    IO(io::Error),
-}
 
 #[derive(Serialize, Deserialize, Encode, Clone)]
 pub struct Chunk {
@@ -53,8 +47,8 @@ pub trait ChunkHandler {
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk>;
     fn add_chunk(&mut self, chunk: Chunk) -> Option<String>;
 
-    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, io::Error>;
-    fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, io::Error>;
+    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, XVaultError>;
+    fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XVaultError>;
 
     fn add_chunks_from_file(&mut self, file: &mut XFile) {
         for chunk in file.chunks.clone() {

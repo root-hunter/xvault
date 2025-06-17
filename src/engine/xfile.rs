@@ -24,14 +24,9 @@ use std::{
 };
 use uuid::Uuid;
 
-use crate::engine::chunk::{CHUNK_SIZE, Chunk};
+use crate::engine::{chunk::{Chunk, CHUNK_SIZE}, error::XVaultError};
 
 pub type XFileChunks = Vec<Chunk>;
-
-#[derive(Debug)]
-pub enum Error {
-    IO(io::Error),
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct XFileQuery {
@@ -118,16 +113,16 @@ impl XFile {
         }
     }
 
-    pub fn export(self, path: String) -> Result<(), Error> {
+    pub fn export(self, path: String) -> Result<(), XVaultError> {
         let path = Path::new(&path);
 
         return self.export_path(path);
     }
 
-    pub fn export_path(self, path: &Path) -> Result<(), Error> {
+    pub fn export_path(self, path: &Path) -> Result<(), XVaultError> {
         if let Some(parent) = path.parent() {
             if let Err(err) = fs::create_dir_all(parent) {
-                return Err(Error::IO(err));
+                return Err(XVaultError::IO(err));
             }
         }
 
@@ -143,13 +138,13 @@ impl XFile {
                 };
 
                 if let Err(err) = file.write(data) {
-                    return Err(Error::IO(err));
+                    return Err(XVaultError::IO(err));
                 }
             }
 
             return Ok(());
         } else {
-            return Err(Error::IO(file.unwrap_err()));
+            return Err(XVaultError::IO(file.unwrap_err()));
         }
     }
 }
