@@ -24,7 +24,7 @@ use std::{
 };
 use uuid::Uuid;
 
-use crate::engine::{chunk::{Chunk, CHUNK_SIZE}, error::XVaultError};
+use crate::engine::{chunk::{Chunk, CHUNK_SIZE}, error::XEngineError};
 
 pub type XFileChunks = Vec<Chunk>;
 
@@ -113,16 +113,16 @@ impl XFile {
         }
     }
 
-    pub fn export(self, path: String) -> Result<(), XVaultError> {
+    pub fn export(self, path: String) -> Result<(), XEngineError> {
         let path = Path::new(&path);
 
         return self.export_path(path);
     }
 
-    pub fn export_path(self, path: &Path) -> Result<(), XVaultError> {
+    pub fn export_path(self, path: &Path) -> Result<(), XEngineError> {
         if let Some(parent) = path.parent() {
             if let Err(err) = fs::create_dir_all(parent) {
-                return Err(XVaultError::IO(err));
+                return Err(XEngineError::IO(err));
             }
         }
 
@@ -138,13 +138,13 @@ impl XFile {
                 };
 
                 if let Err(err) = file.write(data) {
-                    return Err(XVaultError::IO(err));
+                    return Err(XEngineError::IO(err));
                 }
             }
 
             return Ok(());
         } else {
-            return Err(XVaultError::IO(file.unwrap_err()));
+            return Err(XEngineError::IO(file.unwrap_err()));
         }
     }
 }

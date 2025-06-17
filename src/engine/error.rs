@@ -1,7 +1,7 @@
 use std::io;
 
 #[derive(Debug)]
-pub enum XVaultError {
+pub enum XEngineError {
     FileNotExists,
     VolumeAlreadyAllocated,
     IO(io::Error),

@@ -26,7 +26,7 @@ pub use std::{
 pub use uuid::Uuid;
 
 use crate::engine::{
-    chunk::{Chunk, ChunkHandler}, error::XVaultError, volume::Volume, xfile::{XFile, XFileChunks, XFileHandler, XFileQuery}
+    chunk::{Chunk, ChunkHandler}, error::XEngineError, volume::Volume, xfile::{XFile, XFileChunks, XFileHandler, XFileQuery}
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -81,11 +81,11 @@ impl ChunkHandler for Device {
         return self.volumes.values().all(|v| v.clone().is_full());
     }
     
-    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, XVaultError> {
+    fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, XEngineError> {
         todo!()
     }
     
-    fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XVaultError> {
+    fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XEngineError> {
         todo!()
     }
     
