@@ -28,7 +28,7 @@ pub use uuid::Uuid;
 use crate::engine::{
     chunk::{Chunk, ChunkHandler, CHUNK_SIZE},
     error::XEngineError,
-    utils::{get_bincode_coinfig, parse_number, parse_uuid_to_string},
+    utils::{get_bincode_coinfig, parse_number, parse_offset_map_elem, parse_uuid_to_string},
 };
 
 const UID_LEN: u64 = 16; // UUID size in bytes
@@ -365,8 +365,19 @@ impl Volume {
         return Ok(file.unwrap());
     }
 
-    pub fn write_headers(&mut self, file: &File) -> Result<(), XEngineError> {
-        self.write_offsets_to_file(file)?;
+    pub fn write_headers(&mut self, file: &File, cached: bool) -> Result<(), XEngineError> {
+        let config = get_bincode_coinfig();
+        let actual_size = if !cached {
+            self.read_actual_size_from_file(file)?
+        } else {
+            self.offsets.len() as u64
+        };
+
+        let header_len = MAP_OFFSETS_START_OFFSET + (actual_size * MAP_OFFSETS_ELEM_LEN);
+        let mut buf = vec![0u8; header_len as usize].as_mut_slice();
+
+        
+
 
         return Ok(());
     }
@@ -406,25 +417,15 @@ impl Volume {
             &buf[OFFSET_ACTUAL_SIZE as usize..(OFFSET_ACTUAL_SIZE + ACTUAL_SIZE_LEN) as usize];
         let actual_size: u64 = parse_number(actual_size_bytes, &config).unwrap();
 
-        let mut offsets = VolumeOffsets::new();
+        let mut offsets = VolumeOffsets::with_capacity(actual_size as usize);
 
         let mut index = MAP_OFFSETS_START_OFFSET as usize;
-        let k = UID_LEN as usize;
 
         for i in 0..actual_size {
             let map_elem_bytes = &buf[index..(index + MAP_OFFSETS_ELEM_LEN as usize)];
+            let result = parse_offset_map_elem(&map_elem_bytes, config).unwrap();
             
-            let chunk_uid_bytes = &map_elem_bytes[..k];
-            let chunk_uid = parse_uuid_to_string(chunk_uid_bytes.try_into().unwrap());
-            
-            let chunk_start_bytes = &map_elem_bytes[k..(k + 8)];
-            let chunk_start = parse_number(chunk_start_bytes, &config)?;
-
-            let chunk_end_bytes = &map_elem_bytes[(k + 8)..(k + 16)];
-            let chunk_end = parse_number(chunk_end_bytes, &config)?;
-
-            let offset = ChunkOffset { start: chunk_start, end: chunk_end };
-            offsets.insert(chunk_uid, offset);
+            offsets.insert(result.uid, result.offset);
             index += MAP_OFFSETS_ELEM_LEN as usize;
         }
 
