@@ -97,7 +97,7 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
             .unwrap();
 
         vol1.alloc_on_disk().unwrap();
-        vol1.add_chunks_from_file(&mut file); 
+        vol1.add_chunks(&file.chunks); 
 
         let fp = OpenOptions::new()
             .read(true)

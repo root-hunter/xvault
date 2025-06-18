@@ -38,3 +38,8 @@ This project uses various external datasets for testing and validation.
 Special thanks to:
 
 - [pfalcon/canterbury-corpus](https://github.com/pfalcon/canterbury-corpus) — a collection of small files widely used for compression algorithm benchmarking and validation. It is used in XVault to test binary and textual file integrity through automated tests.
+
+
+## TODO
+
+- Queue for write and read to/from file volume

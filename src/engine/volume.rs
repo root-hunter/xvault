@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub use bincode::{Decode, Encode};
 pub use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::OpenOptions, io::Write, os::unix::fs::FileExt};
+use std::{collections::HashMap, fs::OpenOptions, io::Write, os::unix::fs::FileExt, vec};
 pub use std::{
     fs::{self, File},
     io::{self, Read},
@@ -25,12 +25,30 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{chunk::{self, Chunk, ChunkHandler}, error::XEngineError};
+use crate::engine::{
+    chunk::{self, Chunk, ChunkHandler, CHUNK_SIZE},
+    error::XEngineError,
+    utils::{get_bincode_coinfig, parse_number, parse_uuid, parse_uuid_to_string},
+};
 
+const UID_LEN: u64 = 16; // UUID size in bytes
 const OFFSET_VOLUME_UID: u64 = 0;
-const OFFSET_MAX_SIZE: u64 = OFFSET_VOLUME_UID + 16;
-const OFFSET_ACTUAL_SIZE: u64 = OFFSET_MAX_SIZE + 8;
-const OFFSET_MAP_OFFSETS: u64 = OFFSET_ACTUAL_SIZE + 8;
+
+const MAX_SIZE_LEN: u64 = 8; //u64 size
+const OFFSET_MAX_SIZE: u64 = OFFSET_VOLUME_UID + UID_LEN;
+
+const ACTUAL_SIZE_LEN: u64 = 8; //u64 size
+const OFFSET_ACTUAL_SIZE: u64 = OFFSET_MAX_SIZE + MAX_SIZE_LEN;
+
+const MAP_OFFSETS_ELEM_CHUNK_UID_LEN: u64 = 16; // UUID size in bytes
+const MAP_OFFSETS_ELEM_OFFSET_START_LEN: u64 = 8; // u64 size
+const MAP_OFFSETS_ELEM_OFFSET_END_LEN: u64 = 8; // u64 size
+
+const MAP_OFFSETS_ELEM_LEN: u64 = MAP_OFFSETS_ELEM_CHUNK_UID_LEN
+    + MAP_OFFSETS_ELEM_OFFSET_START_LEN
+    + MAP_OFFSETS_ELEM_OFFSET_END_LEN;
+
+const MAP_OFFSETS_START_OFFSET: u64 = UID_LEN + MAX_SIZE_LEN + ACTUAL_SIZE_LEN;
 
 //pub type VolumeChunkOffset = [u8; 2];
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -115,8 +133,7 @@ impl Volume {
             return Err(XEngineError::IO(err));
         }
 
-        let volume_uid = Uuid::from_bytes_le(buf);
-        let volume_uid = volume_uid.to_string();
+        let volume_uid = parse_uuid_to_string(buf);
         return Ok(volume_uid);
     }
 
@@ -148,13 +165,8 @@ impl Volume {
             return Err(XEngineError::IO(err));
         }
 
-        let config = bincode::config::standard()
-            .with_little_endian()
-            .with_fixed_int_encoding();
-        let max_size: u64 = bincode::decode_from_slice(&buf, config)
-            .map_err(XEngineError::Decode)
-            .unwrap()
-            .0;
+        let config = get_bincode_coinfig();
+        let max_size = parse_number(&buf, &config)?;
 
         return Ok(max_size);
     }
@@ -165,13 +177,8 @@ impl Volume {
             return Err(XEngineError::IO(err));
         }
 
-        let config = bincode::config::standard()
-            .with_little_endian()
-            .with_fixed_int_encoding();
-        let actual_size: u64 = bincode::decode_from_slice(&buf, config)
-            .map_err(XEngineError::Decode)
-            .unwrap()
-            .0;
+        let config = get_bincode_coinfig();
+        let actual_size: u64 = parse_number(&buf, &config)?;
 
         return Ok(actual_size);
     }
@@ -218,14 +225,17 @@ impl Volume {
                 }
 
                 let mut file = res.unwrap();
-                let config = bincode::config::standard()
-                    .with_little_endian()
-                    .with_fixed_int_encoding();
+                let config = get_bincode_coinfig();
 
                 let volume_uid = Uuid::parse_str(&self.uid).unwrap();
                 let volume_uid = volume_uid.to_bytes_le();
 
-                file.write_all(&volume_uid).unwrap();
+                let volume_size = 
+                    MAP_OFFSETS_START_OFFSET
+                    + (MAP_OFFSETS_ELEM_LEN * self.max_size)
+                    + (CHUNK_SIZE as u64 * self.max_size); 
+                
+                file.set_len(volume_size).unwrap();
 
                 let max_size =
                     bincode::encode_to_vec(&self.max_size, config).map_err(XEngineError::Encode)?;
@@ -237,22 +247,9 @@ impl Volume {
                 println!("max_size length: {}", max_size.len());
                 println!("actual_size length: {}", actual_size.len());
 
+                file.write_all(&volume_uid).unwrap();
                 file.write_all(&max_size).unwrap();
                 file.write_all(&actual_size).unwrap();
-
-                // Chunks(10) = 8 + 8 + (10 × 32) + (10 × 4096) = 41296
-
-                // ~ 320:1 volume file ratio for each 320 GB of data 1 GB of volume file is overhead
-
-                let map_offsets_elem = [255u8; 16 + 16]; // (UID [u8; 16] (16 bytes) + offset{start u64 (8 bytes) + end u64 (8 bytes)})
-                for i in 0..self.max_size {
-                    file.write_all(&map_offsets_elem).unwrap();
-                }
-
-                let chunk_elem = [255u8; 4096];
-                for i in 0..self.max_size {
-                    file.write_all(&chunk_elem).unwrap();
-                }
 
                 return Ok(());
             } else {
@@ -262,11 +259,9 @@ impl Volume {
     }
 
     pub fn write_offsets_to_file(&self, file: &File) -> Result<(), XEngineError> {
-        let config = bincode::config::standard()
-            .with_little_endian()
-            .with_fixed_int_encoding();
+        let config = get_bincode_coinfig();
 
-        let mut index = OFFSET_MAP_OFFSETS;
+        let mut index = MAP_OFFSETS_START_OFFSET;
         let count = self.offsets.len() as u64;
 
         // Write the actual size of the offsets map
@@ -276,7 +271,6 @@ impl Volume {
         if let Err(err) = file.write_all_at(&actual_size, OFFSET_ACTUAL_SIZE) {
             return Err(XEngineError::IO(err));
         }
-
 
         for (uid, offset) in &self.offsets {
             let uid_bytes = Uuid::parse_str(uid).unwrap().to_bytes_le();
@@ -311,17 +305,15 @@ impl Volume {
 
     pub fn read_offsets_from_file(&mut self, file: &File) -> Result<VolumeOffsets, XEngineError> {
         let mut offsets = VolumeOffsets::new();
-        
+
         let actual_size = self.read_actual_size_from_file(file)?;
 
-        let mut index = OFFSET_MAP_OFFSETS;
+        let mut index = MAP_OFFSETS_START_OFFSET;
         let mut chunk_uid_buf = [0u8; 16];
         let mut chunk_start = [0u8; 16];
         let mut chunk_end = [0u8; 16];
 
-        let config = bincode::config::standard()
-            .with_little_endian()
-            .with_fixed_int_encoding();
+        let config = get_bincode_coinfig();
 
         for i in 0..actual_size {
             file.read_at(&mut chunk_uid_buf, index).unwrap();
@@ -345,19 +337,75 @@ impl Volume {
                 .unwrap()
                 .0;
 
-            offsets.insert(chunk_uid, ChunkOffset { start: chunk_start, end: chunk_end });
+            offsets.insert(
+                chunk_uid,
+                ChunkOffset {
+                    start: chunk_start,
+                    end: chunk_end,
+                },
+            );
         }
 
         return Ok(offsets);
     }
-
 
     pub fn set_offsets_from_file(&mut self, file: &File) -> Result<(), XEngineError> {
         let offsets = self.read_offsets_from_file(file)?;
         self.offsets = offsets.clone();
         return Ok(());
     }
-    
+
+    pub fn get_fp(&mut self, write: bool) -> Result<File, XEngineError> {
+        let file = OpenOptions::new().read(true).write(write).open(&self.path);
+
+        if let Err(err) = file {
+            return Err(XEngineError::IO(err));
+        }
+
+        return Ok(file.unwrap());
+    }
+
+    pub fn write_headers(&mut self, file: &File) -> Result<(), XEngineError> {
+        self.write_offsets_to_file(file)?;
+
+        return Ok(());
+    }
+
+    pub fn read_headers(&mut self, file: &mut File, cached: bool) -> Result<(), XEngineError> {
+        let config = get_bincode_coinfig();
+        let actual_size = if !cached {
+            self.read_actual_size_from_file(file)?
+        } else {
+            self.offsets.len() as u64
+        };
+
+        // UID + MAX_SIZE + ACTUAL_SIZE + OFFSET_MAP_OFFSETS + (max_size * 32)
+        let header_len = MAP_OFFSETS_START_OFFSET + (actual_size * MAP_OFFSETS_ELEM_LEN);
+        let mut buf = vec![0u8; header_len as usize];
+
+        let bytes = file.read_exact(&mut buf);
+
+        if let Err(err) = bytes {
+            return Err(XEngineError::IO(err));
+        }
+
+        let buf = buf.as_slice();
+        let volume_uid_bytes = buf
+            [OFFSET_VOLUME_UID as usize..(OFFSET_VOLUME_UID + UID_LEN) as usize]
+            .try_into()
+            .unwrap();
+        let volume_uid = Uuid::from_bytes_le(volume_uid_bytes);
+
+        let max_size_bytes =
+            &buf[OFFSET_MAX_SIZE as usize..(OFFSET_MAX_SIZE + MAX_SIZE_LEN) as usize];
+        let max_size: u64 = parse_number(max_size_bytes, &config).unwrap();
+
+        let actual_size_bytes =
+            &buf[OFFSET_ACTUAL_SIZE as usize..(OFFSET_ACTUAL_SIZE + ACTUAL_SIZE_LEN) as usize];
+        let actual_size: u64 = parse_number(actual_size_bytes, &config).unwrap();
+
+        return Ok(());
+    }
 }
 
 impl ChunkHandler for Volume {
@@ -407,9 +455,7 @@ impl ChunkHandler for Volume {
             .values()
             .map(|x| x.clone().end)
             .max()
-            .unwrap_or(OFFSET_MAP_OFFSETS);
-
-        println!("Head chunks offset: {}", head_chunks);
+            .unwrap_or(MAP_OFFSETS_START_OFFSET);
 
         let chunk_offset = ChunkOffset {
             start: head_chunks,

@@ -47,12 +47,20 @@ pub trait ChunkHandler {
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk>;
     fn add_chunk(&mut self, chunk: Chunk) -> Option<String>;
 
+    fn add_chunks(&mut self, chunks: &Vec<Chunk>) {
+        for chunk in chunks.clone() {
+            self.add_chunk(chunk);
+        }
+    }
+
     fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, XEngineError>;
     fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XEngineError>;
 
-    fn add_chunks_from_file(&mut self, file: &mut XFile) {
-        for chunk in file.chunks.clone() {
-            self.add_chunk(chunk);
+    fn add_chunks_v2(&mut self, file: &File, chunks: &Vec<Chunk>) -> Result<(), XEngineError> {
+        for chunk in chunks.clone() {
+            self.add_chunk_v2(file, chunk)?;
         }
+
+        return Ok(());
     }
 }

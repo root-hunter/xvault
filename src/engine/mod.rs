@@ -19,4 +19,5 @@ pub mod device;
 pub mod volume;
 pub mod xfile;
 pub mod chunk;
+pub mod utils;
 pub mod error;

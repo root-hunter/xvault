@@ -29,22 +29,8 @@ fn main() {
 
         vol1.alloc_on_disk().unwrap();
 
-        vol1.add_chunks_from_file(&mut file); 
-
-        let fp = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(vol1.path.clone())
-            .expect("Failed to open volume file");
-
-        for (uid, chunk) in vol1.chunks.clone() {
-            println!("Chunk UID: {}, Length: {:?}", chunk.uid, chunk.length);
-
-            vol1.add_chunk_v2(&fp, chunk).unwrap();
-        }
-
-        let old_chunk_uids: Vec<String> = vol1.offsets.keys().cloned().collect();
-
+        let fp = vol1.get_fp(true).unwrap();
+        vol1.add_chunks_v2(&fp, &file.chunks).unwrap(); 
         vol1.write_offsets_to_file(&fp).unwrap();
 
         let chunk = vol1.get_chunk_v2(&fp, "1263e31a-cb1c-5833-b22b-0e0c0b96165a".into()).unwrap();
@@ -57,17 +43,11 @@ fn main() {
         }
 
         vol1.set_offsets_from_file(&fp).unwrap();
-        let new_chunk_uids: Vec<String> = vol1.offsets.keys().cloned().collect();
 
         println!("Volume UID: {}", vol1.uid);
         println!("Volume Path: {}", vol1.path);
         println!("Volume Max Size: {}", vol1.max_size);
         println!("Offsets: {:?}", vol1.offsets);
-        assert!(new_chunk_uids.len() == old_chunk_uids.len(), "Chunk UIDs have changed after writing offsets to file.");
-
-        for old in old_chunk_uids {
-            assert!(new_chunk_uids.contains(&old), "Old chunk UID {} not found in new chunk UIDs.", old);
-        }
 
     } else {
         println!("Failed to create XFile");
