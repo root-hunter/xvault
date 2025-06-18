@@ -29,7 +29,7 @@ fn main() {
 
         vol1.alloc_on_disk().unwrap();
 
-        let fp = vol1.get_fp(true).unwrap();
+        let mut fp = vol1.get_fp(true).unwrap();
         vol1.add_chunks_v2(&fp, &file.chunks).unwrap(); 
         vol1.write_offsets_to_file(&fp).unwrap();
 
@@ -42,7 +42,9 @@ fn main() {
             println!("Chunk not found");
         }
 
-        vol1.set_offsets_from_file(&fp).unwrap();
+        //vol1.set_offsets_from_file(&fp).unwrap();
+
+        vol1.read_headers(&mut fp, false).unwrap();
 
         println!("Volume UID: {}", vol1.uid);
         println!("Volume Path: {}", vol1.path);

@@ -394,15 +394,41 @@ impl Volume {
             [OFFSET_VOLUME_UID as usize..(OFFSET_VOLUME_UID + UID_LEN) as usize]
             .try_into()
             .unwrap();
-        let volume_uid = Uuid::from_bytes_le(volume_uid_bytes);
+        let volume_uid = parse_uuid_to_string(volume_uid_bytes);
+        self.set_uid(volume_uid);
 
         let max_size_bytes =
             &buf[OFFSET_MAX_SIZE as usize..(OFFSET_MAX_SIZE + MAX_SIZE_LEN) as usize];
-        let max_size: u64 = parse_number(max_size_bytes, &config).unwrap();
+        let max_size = parse_number(max_size_bytes, &config).unwrap();
+        self.set_max_size(max_size);
 
         let actual_size_bytes =
             &buf[OFFSET_ACTUAL_SIZE as usize..(OFFSET_ACTUAL_SIZE + ACTUAL_SIZE_LEN) as usize];
         let actual_size: u64 = parse_number(actual_size_bytes, &config).unwrap();
+
+        let mut offsets = VolumeOffsets::new();
+
+        let mut index = MAP_OFFSETS_START_OFFSET as usize;
+        let k = UID_LEN as usize;
+
+        for i in 0..actual_size {
+            let map_elem_bytes = &buf[index..(index + MAP_OFFSETS_ELEM_LEN as usize)];
+            
+            let chunk_uid_bytes = &map_elem_bytes[..k];
+            let chunk_uid = parse_uuid_to_string(chunk_uid_bytes.try_into().unwrap());
+            
+            let chunk_start_bytes = &map_elem_bytes[k..(k + 8)];
+            let chunk_start = parse_number(chunk_start_bytes, &config)?;
+
+            let chunk_end_bytes = &map_elem_bytes[(k + 8)..(k + 16)];
+            let chunk_end = parse_number(chunk_end_bytes, &config)?;
+
+            let offset = ChunkOffset { start: chunk_start, end: chunk_end };
+            offsets.insert(chunk_uid, offset);
+            index += MAP_OFFSETS_ELEM_LEN as usize;
+        }
+
+        self.offsets = offsets;
 
         return Ok(());
     }
