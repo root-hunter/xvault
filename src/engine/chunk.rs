@@ -25,7 +25,7 @@ pub use std::{
 };
 pub use uuid::Uuid;
 
-use crate::engine::{error::XEngineError, xfile::XFile};
+use crate::engine::error::XEngineError;
 
 pub const CHUNK_SIZE: usize = 512;
 

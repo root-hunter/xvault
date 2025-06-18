@@ -88,7 +88,7 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
 
     fs::remove_file(vol_path.clone()).unwrap_or(());
 
-    if let Ok(mut file) = file {
+    if let Ok(file) = file {
         let mut vol1 = Volume::new();
         vol1.set_path(vol_path.clone())
             .set_uid_from_device(DEVIDE_UID.into())

@@ -1,4 +1,4 @@
-use std::fs::{self, OpenOptions};
+use std::fs::{self};
 
 use uuid::Uuid;
 use xvault::engine::{chunk::ChunkHandler, volume::Volume, xfile::XFile};
@@ -19,7 +19,7 @@ fn main() {
 
     fs::remove_file(vol_path.clone()).unwrap_or(());
 
-    if let Ok(mut file) = file {
+    if let Ok(file) = file {
         let mut vol1 = Volume::new();
         vol1.set_path(vol_path)
             .set_uid_from_device(DEVIDE_UID.into())

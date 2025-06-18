@@ -26,9 +26,9 @@ pub use std::{
 pub use uuid::Uuid;
 
 use crate::engine::{
-    chunk::{self, Chunk, ChunkHandler, CHUNK_SIZE},
+    chunk::{Chunk, ChunkHandler, CHUNK_SIZE},
     error::XEngineError,
-    utils::{get_bincode_coinfig, parse_number, parse_uuid, parse_uuid_to_string},
+    utils::{get_bincode_coinfig, parse_number, parse_uuid_to_string},
 };
 
 const UID_LEN: u64 = 16; // UUID size in bytes
