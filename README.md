@@ -45,7 +45,7 @@ Special thanks to:
 ### Install coverage tool (tarpaulin)
 
 ```bash
-cargo install tarpaulin
+cargo install cargo-tarpaulin
 ```
 
 ### Coverage
