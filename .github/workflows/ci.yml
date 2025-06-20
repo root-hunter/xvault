@@ -27,5 +27,5 @@ jobs:
         run: cargo test --profile ${{ matrix.BUILD_TARGET }}
       - name: Run tests coverage in "${{ matrix.BUILD_TARGET }}" mode
         run: |
-          cargo install tarpaulin
+          cargo install cargo-tarpaulin
           make test-coverage
