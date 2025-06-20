@@ -21,4 +21,4 @@ test-init-assets:
 	rm -rf ./tmp/temp_repo
 
 test-coverage:
-	cargo tarpaulin --exclude-files src/main.rs
+	cargo tarpaulin --exclude-files src/main.rs --all-features
