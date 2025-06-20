@@ -40,7 +40,16 @@ Special thanks to:
 - [pfalcon/canterbury-corpus](https://github.com/pfalcon/canterbury-corpus) — a collection of small files widely used for compression algorithm benchmarking and validation. It is used in XVault to test binary and textual file integrity through automated tests.
 
 
-## 📊 Test Coverage
+## 📊 Tests Coverage
+
+### Install coverage tool (tarpaulin)
+
+```bash
+cargo install tarpaulin
+```
+
+### Coverage
+
 ```
 || Uncovered Lines:
 || src/engine/chunk.rs: 50-52
