@@ -19,3 +19,6 @@ test-init-assets:
 	git clone --depth 1 https://github.com/pfalcon/canterbury-corpus ./tmp/temp_repo
 	rsync -av --progress ./tmp/temp_repo/ ./assets --exclude .git
 	rm -rf ./tmp/temp_repo
+
+test-coverage:
+	cargo tarpaulin --exclude-files src/main.rs
