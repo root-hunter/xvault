@@ -260,58 +260,6 @@ impl Volume {
         }
     }
 
-    pub fn read_offsets_from_file(&mut self, file: &mut File) -> Result<VolumeOffsets, XEngineError> {
-        let mut offsets = VolumeOffsets::new();
-
-        let actual_size = self.read_actual_size_from_file(file)?;
-
-        let mut index = MAP_OFFSETS_START_OFFSET;
-        let mut chunk_uid_buf = [0u8; 16];
-        let mut chunk_start = [0u8; 16];
-        let mut chunk_end = [0u8; 16];
-
-        let config = get_bincode_config();
-
-        for i in 0..actual_size {
-            file.read_at(&mut chunk_uid_buf, index).unwrap();
-
-            index += 16; // UID size
-
-            file.read_exact_at(&mut chunk_start, index).unwrap();
-            index += 8; // u64 size
-
-            file.read_exact_at(&mut chunk_end, index).unwrap();
-            index += 8; // u64 size
-
-            let chunk_uid = Uuid::from_bytes_le(chunk_uid_buf).to_string();
-            let chunk_start: u64 = bincode::decode_from_slice(&chunk_start, config)
-                .map_err(XEngineError::Decode)
-                .unwrap()
-                .0;
-
-            let chunk_end: u64 = bincode::decode_from_slice(&chunk_end, config)
-                .map_err(XEngineError::Decode)
-                .unwrap()
-                .0;
-
-            offsets.insert(
-                chunk_uid,
-                ChunkOffset {
-                    start: chunk_start,
-                    end: chunk_end,
-                },
-            );
-        }
-
-        return Ok(offsets);
-    }
-
-    pub fn set_offsets_from_file(&mut self, file: &mut File) -> Result<(), XEngineError> {
-        let offsets = self.read_offsets_from_file(file)?;
-        self.offsets = offsets.clone();
-        return Ok(());
-    }
-
     pub fn open(&mut self, write: bool) -> Result<File, XEngineError> {
         let file = OpenOptions::new().read(true).write(write).open(&self.path);
 
