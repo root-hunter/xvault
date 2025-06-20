@@ -79,8 +79,7 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
     let vol_path = format!("./tmp/vol35003_{test_id}.rootfs").to_string();
     let vfolder = format!("vfolder1_{test_id}");
     let file_path = std::path::Path::new(&file_path);
-
-    println!("File path: {}", file_path.display());
+    let file_path = std::path::Path::new(file_path);
 
     let user_uid = Uuid::parse_str(USER_UID).unwrap();
 
@@ -92,29 +91,41 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
         let mut vol1 = Volume::new();
         vol1.set_path(vol_path.clone())
             .set_uid_from_device(DEVIDE_UID.into())
-            .set_max_size(100)
+            .set_max_size(200)
             .build()
             .unwrap();
 
         vol1.alloc_on_disk().unwrap();
-        vol1.add_chunks(&file.chunks); 
 
-        let fp = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(vol1.path.clone())
-            .expect("Failed to open volume file");
+        let mut fp = vol1.open(true).unwrap();
+        vol1.add_chunks_v2(&fp, &file.chunks).unwrap();
 
-        let old_chunk_uids: Vec<String> = vol1.offsets.keys().cloned().collect();
-        vol1.write_offsets_to_file(&fp).unwrap();
+        let old_chunks = vol1.offsets.clone();
 
-        vol1.set_offsets_from_file(&fp).unwrap();
-        let new_chunk_uids: Vec<String> = vol1.offsets.keys().cloned().collect();
+        vol1.write_headers(&mut fp).unwrap();
+        vol1.offsets.clear();
+        vol1.chunks.clear();
 
-        assert!(new_chunk_uids.len() == old_chunk_uids.len(), "Chunk UIDs have changed after writing offsets to file.");
+        vol1.read_headers(&mut fp, false).unwrap();
 
-        for old in old_chunk_uids {
-            assert!(new_chunk_uids.contains(&old), "Old chunk UID {} not found in new chunk UIDs.", old);
+        let new_chunks = vol1.offsets.clone();
+
+        println!("Volume UID: {}", vol1.uid);
+        println!("Volume Path: {}", vol1.path);
+        println!("Volume Max Size: {}", vol1.max_size);
+        
+        assert_eq!(old_chunks.len(), new_chunks.len());
+
+        let new_chunks_uids: Vec<String> = new_chunks.keys().map(|e| e.clone()).collect();
+        for (i, old) in old_chunks.clone().into_iter().enumerate() {
+            let old_uid = old.0;
+            let old_offset = old.1;
+
+            assert!(new_chunks_uids.contains(&old_uid), "{} not included in the new uids", old_uid);
+
+            let new_offset = old_chunks[&old_uid];
+            assert_eq!(new_offset.start, old_offset.start, "Different start index value for chunk: {}", old_uid);
+            assert_eq!(new_offset.end, old_offset.end, "Different end index value for chunk: {}", old_uid);
         }
 
         fs::remove_file(vol_path.clone()).unwrap_or(());

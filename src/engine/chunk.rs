@@ -27,7 +27,7 @@ pub use uuid::Uuid;
 
 use crate::engine::error::XEngineError;
 
-pub const CHUNK_SIZE: usize = 512;
+pub const CHUNK_SIZE: usize = 4096;
 
 #[derive(Serialize, Deserialize, Encode, Clone)]
 pub struct Chunk {
