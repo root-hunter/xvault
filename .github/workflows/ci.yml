@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        WORKSPACE: [xvault]
         BUILD_TARGET: [release]
     outputs:
       release_built: ${{ steps.set-output.outputs.release_built }}
@@ -25,9 +26,9 @@ jobs:
           cargo audit
       - name: Clone tests assets
         run: make test-init-assets
-      - name: Run tests in "${{ matrix.BUILD_TARGET }}" mode
+      - name: Run tests in ${{ matrix.WORKSPACE }} -> "${{ matrix.BUILD_TARGET }}" mode
         run: |
           cargo install cargo-tarpaulin --locked --quiet
           make test-coverage PROFILE=${{ matrix.BUILD_TARGET }}
-      - name: Build binaries in "${{ matrix.BUILD_TARGET }}" mode
-        run: cargo build --profile ${{ matrix.BUILD_TARGET }}
+      - name: Build binaries in ${{ matrix.WORKSPACE }} -> "${{ matrix.BUILD_TARGET }}" mode
+        run: cargo build -p ${{ matrix.WORKSPACE }} --profile ${{ matrix.BUILD_TARGET }}
