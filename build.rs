@@ -67,12 +67,11 @@ fn build_device_tests(out_dir: String) {
             r#"
     #[test]
     fn {test_name}() {{
-    test_file("{relative_path_str}", {compare_fn});
+    test_file("{relative_path_str}");
     }}
     "#,
             test_name = test_name,
             relative_path_str = relative_path_str,
-            compare_fn = "compare_files_bin"
         )
         .unwrap();
 
