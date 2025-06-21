@@ -47,7 +47,7 @@ fn main() {
 
 
         let chunk = vol1
-            .get_chunk_v2(&fp, "2151b616-8f2c-574b-9e46-1abc0abb11da".into())
+            .get_chunk_v2(&fp, "1faccbd4-14f2-5022-bba2-447e6e7f845d".into())
             .unwrap();
 
         if let Some(chunk) = chunk {

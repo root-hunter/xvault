@@ -25,4 +25,6 @@ test-init-assets:
 PROFILE ?= dev
 
 test-coverage:
-	cargo tarpaulin --exclude-files src/main.rs --all-features --profile=${PROFILE}
+	cargo tarpaulin \
+	--exclude-files xvault/src/main.rs */tests/* \
+	--all-features --profile=${PROFILE}
