@@ -1,14 +1,14 @@
 WORKSPACE ?= xvault
 
 test:
-	cargo build
-	cd ${WORKSPACE}; cargo test --verbose
+	cargo build -p ${WORKSPACE}
+	cargo test -p ${WORKSPACE} --verbose
 
 run:
-	cd ${WORKSPACE}; cargo run
+	cargo run -p ${WORKSPACE}
 
 dev: test
-	cd ${WORKSPACE}; cargo run
+	cargo run -p ${WORKSPACE}
 
 test-init-assets:
 	mkdir -p ./${WORKSPACE}/tmp

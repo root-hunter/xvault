@@ -11,7 +11,7 @@ fn main() {
 fn build_xfile_tests(out_dir: String) {
     let dest_path = Path::new(&out_dir).join("generated_xfile_tests.rs");
     let mut f = fs::File::create(&dest_path).unwrap();
-    let assets_dir = Path::new("../assets");
+    let assets_dir = Path::new("assets");
 
     let mut test_id = 0;
 
@@ -47,7 +47,7 @@ fn build_xfile_tests(out_dir: String) {
 fn build_device_tests(out_dir: String) {
     let dest_path = Path::new(&out_dir).join("generated_device_tests.rs");
     let mut f = fs::File::create(&dest_path).unwrap();
-    let assets_dir = Path::new("../assets");
+    let assets_dir = Path::new("assets");
 
     let mut test_id = 0;
 
@@ -82,7 +82,7 @@ fn build_device_tests(out_dir: String) {
 fn build_volume_tests(out_dir: String) {
     let dest_path = Path::new(&out_dir).join("generated_volume_tests.rs");
     let mut f = fs::File::create(&dest_path).unwrap();
-    let assets_dir = Path::new("../assets");
+    let assets_dir = Path::new("assets");
 
     let mut test_id = 0;
 
