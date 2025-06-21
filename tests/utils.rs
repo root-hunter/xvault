@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 use std::{
-    fs::{self, File}, io::{BufReader, Read}, path::PathBuf
+    fs::{File}, io::{BufReader, Read}, path::PathBuf
 };
 
 pub fn compare_files(original_path: &PathBuf, exported_path: &PathBuf) {
