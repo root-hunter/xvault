@@ -21,13 +21,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check Vulnerability in Deps (cargo audit)
         run: |
-          cargo install cargo-audit --locked
+          cargo install cargo-audit --locked --quiet
           cargo audit
       - name: Clone tests assets
         run: make test-init-assets
       - name: Run tests in "${{ matrix.BUILD_TARGET }}" mode
         run: |
-          cargo install cargo-tarpaulin --locked
+          cargo install cargo-tarpaulin --locked --quiet
           make test-coverage PROFILE=${{ matrix.BUILD_TARGET }}
       - name: Build binaries in "${{ matrix.BUILD_TARGET }}" mode
         run: cargo build --profile ${{ matrix.BUILD_TARGET }}
