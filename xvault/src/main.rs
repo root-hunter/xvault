@@ -83,6 +83,6 @@ fn main() {
         }
     
     } else {
-        println!("Failed to create XFile");
+        println!("Failed to create XFile ({:?}): {}", file_path, file.unwrap_err());
     }
 }
