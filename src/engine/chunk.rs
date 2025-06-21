@@ -65,7 +65,7 @@ pub trait ChunksHandler {
         
         let chunks_count = chunks.len();
 
-        assert!(actual_size + chunks_count <= max_size, "Can't add chunks to handler they exteed the actual_size + chunks_count > max_size ({} + {} > {})", actual_size, chunks_count, max_size);
+        assert!(actual_size + chunks_count <= max_size, "Can't add chunks to handler: actual_size + chunks_count > max_size ({} + {} > {})", actual_size, chunks_count, max_size);
 
         for chunk in chunks.clone() {
             self.add_chunk_v2(file, chunk)?;

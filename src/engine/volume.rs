@@ -383,7 +383,7 @@ impl ChunksHandler for Volume {
     }
     
     fn get_actual_size(&self) -> u64 {
-        return self.chunks.len() as u64;
+        return self.offsets.len() as u64;
     }
 
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk> {
@@ -424,6 +424,11 @@ impl ChunksHandler for Volume {
     }
 
     fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XEngineError> {
+        let max_size = self.get_max_size();
+        let actual_size = self.get_actual_size();
+
+        assert!(actual_size + 1 <= max_size, "Can't add others chunks to the handler: actual_size + 1 > max_size ({} + 1 > {})", actual_size, max_size);
+        
         let chunk_uid = chunk.uid.clone();
 
         let offsets = self.offsets.clone();

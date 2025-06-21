@@ -20,7 +20,6 @@ fn main() {
     fs::remove_file(vol_path.clone()).unwrap_or(());
 
     if let Ok(file) = file {
-
         let dev= Device::new(DEVIDE_UID.into()).unwrap();
 
         let mut vol1 = Volume::new();
@@ -35,7 +34,6 @@ fn main() {
 
         let mut fp = vol1.open(true).unwrap();
         vol1.add_chunks_v2(&fp, &file.chunks).unwrap();
-
 
         //vol1.set_offsets_from_file(&fp).unwrap();
 

@@ -86,7 +86,6 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
 
     fs::remove_file(vol_path.clone()).unwrap_or(());
 
-
     if let Ok(file) = file {
         let max_size = file.chunks.len();
 
