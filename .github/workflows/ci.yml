@@ -25,10 +25,10 @@ jobs:
           cargo install cargo-audit --locked --quiet
           cargo audit
       - name: Clone tests assets
-        run: make test-init-assets
+        run: make test-init-assets WORKSPACE=${{ matrix.WORKSPACE }}
       - name: Run tests in ${{ matrix.WORKSPACE }} -> "${{ matrix.BUILD_TARGET }}" mode
         run: |
           cargo install cargo-tarpaulin --locked --quiet
-          make test-coverage PROFILE=${{ matrix.BUILD_TARGET }}
+          make test-coverage WORKSPACE=${{ matrix.WORKSPACE }} PROFILE=${{ matrix.BUILD_TARGET }}
       - name: Build binaries in ${{ matrix.WORKSPACE }} -> "${{ matrix.BUILD_TARGET }}" mode
         run: cargo build -p ${{ matrix.WORKSPACE }} --profile ${{ matrix.BUILD_TARGET }}

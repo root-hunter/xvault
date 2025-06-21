@@ -25,5 +25,6 @@ test-init-assets:
 
 test-coverage:
 	cargo tarpaulin \
-	--exclude-files xvault/src/main.rs */tests/* \
+	-p ${WORKSPACE} \
+	--exclude-files src/main.rs */tests/* \
 	--all-features --profile=${PROFILE}
