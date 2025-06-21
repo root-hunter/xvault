@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-use std::{fs::{self, OpenOptions}, io::Write, path::Path};
+use std::{fs::{self, OpenOptions}, path::Path};
 use uuid::Uuid;
 use xvault::engine::{chunk::ChunkHandler, volume::Volume, xfile::XFile};
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
