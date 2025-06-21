@@ -60,6 +60,13 @@ pub trait ChunksHandler {
     fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XEngineError>;
 
     fn add_chunks_v2(&mut self, file: &File, chunks: &Vec<Chunk>) -> Result<(), XEngineError> {
+        let max_size = self.get_max_size() as usize;
+        let actual_size = self.get_actual_size() as usize;
+        
+        let chunks_count = chunks.len();
+
+        assert!(actual_size + chunks_count <= max_size, "Can't add chunks to handler they exteed the actual_size + chunks_count > max_size ({} + {} > {})", actual_size, chunks_count, max_size);
+
         for chunk in chunks.clone() {
             self.add_chunk_v2(file, chunk)?;
         }

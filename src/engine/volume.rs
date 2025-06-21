@@ -413,7 +413,6 @@ impl ChunksHandler for Volume {
             let mut buf = vec![0u8; chunk_len as usize];
             file.read_at(buf.as_mut_slice(), offset.start).unwrap();
 
-            let buf_len = buf.len();
             let chunk = Chunk {
                 uid: uuid,
                 data: buf,

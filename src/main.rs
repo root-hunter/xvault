@@ -1,7 +1,7 @@
 use std::fs::{self};
 
 use uuid::Uuid;
-use xvault::engine::{chunk::ChunksHandler, volume::Volume, xfile::XFile};
+use xvault::engine::{chunk::ChunksHandler, device::Device, volume::Volume, xfile::XFile};
 
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
 const DEVIDE_UID: &str = "4754f539-a953-4dc4-ad37-7a8ab142218c";
@@ -20,20 +20,36 @@ fn main() {
     fs::remove_file(vol_path.clone()).unwrap_or(());
 
     if let Ok(file) = file {
+
+        let dev= Device::new(DEVIDE_UID.into()).unwrap();
+
         let mut vol1 = Volume::new();
         vol1.set_path(vol_path)
-            .set_uid_from_device(DEVIDE_UID.into())
+            .set_uid_from_device(dev.uid)
             .set_max_size(200)
             .build()
             .unwrap();
-
         vol1.alloc_on_disk().unwrap();
+
+        println!("File chunks: {:#?}", file.chunks);
 
         let mut fp = vol1.open(true).unwrap();
         vol1.add_chunks_v2(&fp, &file.chunks).unwrap();
 
+
+        //vol1.set_offsets_from_file(&fp).unwrap();
+
+        let old_chunks = vol1.offsets.clone();
+
+        vol1.write_headers(&mut fp).unwrap();
+        vol1.offsets.clear();
+        vol1.chunks.clear();
+
+        vol1.read_headers(&mut fp, false).unwrap();
+
+
         let chunk = vol1
-            .get_chunk_v2(&fp, "1263e31a-cb1c-5833-b22b-0e0c0b96165a".into())
+            .get_chunk_v2(&fp, "3508b4d9-7b11-5893-84c6-0c301b103954".into())
             .unwrap();
 
         if let Some(chunk) = chunk {
@@ -46,20 +62,9 @@ fn main() {
             println!("Chunk not found");
         }
 
-        //vol1.set_offsets_from_file(&fp).unwrap();
-
-        let old_chunks = vol1.offsets.clone();
-
-        vol1.write_headers(&mut fp).unwrap();
-        vol1.offsets.clear();
-        vol1.chunks.clear();
-
-        vol1.read_headers(&mut fp, false).unwrap();
-
         let new_chunks = vol1.offsets.clone();
 
         //vol1.read_headers(&mut fp, false).unwrap();
-        
 
         println!("Volume UID: {}", vol1.uid);
         println!("Volume Path: {}", vol1.path);

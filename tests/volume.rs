@@ -79,7 +79,6 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
     let vol_path = format!("./tmp/vol35003_{test_id}.rootfs").to_string();
     let vfolder = format!("vfolder1_{test_id}");
     let file_path = std::path::Path::new(&file_path);
-    let file_path = std::path::Path::new(file_path);
 
     let user_uid = Uuid::parse_str(USER_UID).unwrap();
 
@@ -87,11 +86,14 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
 
     fs::remove_file(vol_path.clone()).unwrap_or(());
 
+
     if let Ok(file) = file {
+        let max_size = file.chunks.len();
+
         let mut vol1 = Volume::new();
         vol1.set_path(vol_path.clone())
             .set_uid_from_device(DEVIDE_UID.into())
-            .set_max_size(200)
+            .set_max_size(max_size as u64)
             .build()
             .unwrap();
 
