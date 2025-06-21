@@ -20,5 +20,7 @@ test-init-assets:
 	rsync -av --progress ./tmp/temp_repo/ ./assets --exclude .git
 	rm -rf ./tmp/temp_repo
 
+PROFILE ?= dev
+
 test-coverage:
-	cargo tarpaulin --exclude-files src/main.rs --all-features
+	cargo tarpaulin --exclude-files src/main.rs --all-features --profile=${PROFILE}
