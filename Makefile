@@ -8,7 +8,7 @@ run:
 	cargo run -p ${WORKSPACE}
 
 dev: test
-	cargo run -p ${WORKSPACE}
+	cd ${WORKSPACE}; cargo run 
 
 test-init-assets:
 	mkdir -p ./${WORKSPACE}/tmp

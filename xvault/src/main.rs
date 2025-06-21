@@ -9,7 +9,7 @@ const VOL_PATH: &str = "./tmp/vol_main.rootfs";
 
 fn main() {
     let vfolder = "vfolder1";
-    let file_path = "assets/canterbury/plrabn12.txt";
+    let file_path = "./assets/canterbury/plrabn12.txt";
     let file_path = std::path::Path::new(file_path);
 
     let user_uid = Uuid::parse_str(USER_UID).unwrap();
