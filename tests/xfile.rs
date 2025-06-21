@@ -25,14 +25,14 @@ use xvault::engine::xfile::XFile;
 use uuid::Uuid;
 
 
-use utils::{compare_files_bin, FnCompareFile};
+use utils::{compare_files};
 
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
 const ASSETS_FOLDER: &str = "./assets";
 const EXPORTS_FOLDER: &str = "./exports/test_xfile";
 const VOL_PATH: &str = "./tmp/vol100.rootfs";
 
-fn test_file(file_path: &str, compare: FnCompareFile) {
+fn test_file(file_path: &str) {
     println!("Testing file: {}", file_path);
 
     let vfolder = "/home";
@@ -57,7 +57,7 @@ fn test_file(file_path: &str, compare: FnCompareFile) {
 
     file.export_path(&export_file_path).unwrap();
 
-    compare(&assets_file_path, &export_file_path);
+    compare_files(&assets_file_path, &export_file_path);
 }
 
 include!(concat!(env!("OUT_DIR"), "/generated_xfile_tests.rs"));

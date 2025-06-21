@@ -31,4 +31,3 @@ walkdir = "^2.5"
 
 [dev-dependencies]
 rand = "^0.9"
-similar = "^2.7"

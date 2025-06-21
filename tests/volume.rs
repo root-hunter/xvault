@@ -103,6 +103,7 @@ fn volume_test_read_and_write_offsets(file_path: String, test_id: usize) {
         let old_chunks = vol1.offsets.clone();
 
         vol1.write_headers(&mut fp).unwrap();
+        
         vol1.offsets.clear();
         vol1.chunks.clear();
 
