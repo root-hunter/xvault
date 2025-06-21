@@ -1,24 +1,26 @@
+WORKSPACE ?= xvault
+
 test:
 	cargo build
-	cargo test --verbose
+	cargo test -p ${WORKSPACE} --verbose
 
 run:
-	cargo run
+	cargo run -p ${WORKSPACE}
 
 dev: test
-	cargo run
+	cargo run -p ${WORKSPACE}
 
 test-init-assets:
-	mkdir -p ./tmp
-	mkdir -p ./assets
-	mkdir -p ./exports
+	mkdir -p ./${WORKSPACE}/tmp
+	mkdir -p ./${WORKSPACE}/assets
+	mkdir -p ./${WORKSPACE}/exports
 
-	rm -rf ./tmp/temp_repo
-	rm -rf ./assets/*
+	rm -rf ./${WORKSPACE}/tmp/temp_repo
+	rm -rf ./${WORKSPACE}/assets/*
 
-	git clone --depth 1 https://github.com/pfalcon/canterbury-corpus ./tmp/temp_repo
-	rsync -av --progress ./tmp/temp_repo/ ./assets --exclude .git
-	rm -rf ./tmp/temp_repo
+	git clone --depth 1 https://github.com/pfalcon/canterbury-corpus ./${WORKSPACE}/tmp/temp_repo
+	rsync -av --progress ./${WORKSPACE}/tmp/temp_repo/ ./${WORKSPACE}/assets --exclude .git
+	rm -rf ./${WORKSPACE}/tmp/temp_repo
 
 PROFILE ?= dev
 
