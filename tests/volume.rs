@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::{fs::{self, OpenOptions}, path::Path};
 use uuid::Uuid;
-use xvault::engine::{chunk::ChunkHandler, volume::Volume, xfile::XFile};
+use xvault::engine::{chunk::ChunksHandler, volume::Volume, xfile::XFile};
 const USER_UID: &str = "da64d273-e31b-48ca-8184-c741a34cb92d";
 const DEVIDE_UID: &str = "4754f539-a953-4dc4-ad37-7a8ab142218c";
 const ASSETS_FOLDER: &str = "./assets";

@@ -26,7 +26,7 @@ pub use std::{
 pub use uuid::Uuid;
 
 use crate::engine::{
-    chunk::{Chunk, ChunkHandler, CHUNK_SIZE},
+    chunk::{Chunk, ChunksHandler, CHUNK_SIZE},
     error::XEngineError,
     utils::{decode_number, decode_uuid_to_string, encode_number, encode_uuid_from_string, get_bincode_config, parse_offset_map_elem},
 };
@@ -155,9 +155,6 @@ impl Volume {
         return self;
     }
 
-    pub fn get_actual_size(&self) -> u64 {
-        return self.chunks.len() as u64;
-    }
 
     pub fn read_max_size_from_file(&mut self, file: &File) -> Result<u64, XEngineError> {
         let mut buf = [0u8; 8]; // u64 size
@@ -380,7 +377,15 @@ impl Volume {
     }
 }
 
-impl ChunkHandler for Volume {
+impl ChunksHandler for Volume {
+    fn get_max_size(&self) -> u64 {
+        return self.max_size;
+    }
+    
+    fn get_actual_size(&self) -> u64 {
+        return self.chunks.len() as u64;
+    }
+
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk> {
         // TODO Lettura del chunk in base all'offset
         return self.chunks.get(&uuid);

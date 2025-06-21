@@ -29,7 +29,7 @@ use rand::{
 };
 use uuid::Uuid;
 use xvault::engine::{
-    chunk::{CHUNK_SIZE, ChunkHandler},
+    chunk::{CHUNK_SIZE, ChunksHandler},
     device::Device,
     volume::Volume,
     xfile::{XFile, XFileHandler, XFileQuery},

@@ -26,7 +26,7 @@ pub use std::{
 pub use uuid::Uuid;
 
 use crate::engine::{
-    chunk::{Chunk, ChunkHandler}, error::XEngineError, volume::Volume, xfile::{XFile, XFileChunks, XFileHandler, XFileQuery}
+    chunk::{Chunk, ChunksHandler}, error::XEngineError, volume::Volume, xfile::{XFile, XFileChunks, XFileHandler, XFileQuery}
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -54,7 +54,15 @@ impl Device {
     }
 }
 
-impl ChunkHandler for Device {
+impl ChunksHandler for Device {
+    fn get_max_size(&self) -> u64 {
+        return self.volumes.values().map(|v| v.get_max_size() as u64).sum();
+    }
+    
+    fn get_actual_size(&self) -> u64 {
+        return self.volumes.values().map(|v| v.get_actual_size() as u64).sum();
+    }
+
     fn get_chunk(&mut self, chunk_uid: String) -> Option<&Chunk> {
         for volume in self.volumes.values_mut() {
             if let Some(chunk) = volume.get_chunk(chunk_uid.clone()) {

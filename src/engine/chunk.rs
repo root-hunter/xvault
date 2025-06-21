@@ -42,7 +42,7 @@ impl Debug for Chunk {
     }
 }
 
-pub trait ChunkHandler {
+pub trait ChunksHandler {
     fn is_full(self) -> bool;
     fn get_chunk(&mut self, uuid: String) -> Option<&Chunk>;
     fn add_chunk(&mut self, chunk: Chunk) -> Option<String>;
@@ -52,6 +52,9 @@ pub trait ChunkHandler {
             self.add_chunk(chunk);
         }
     }
+
+    fn get_actual_size(&self) -> u64;
+    fn get_max_size(&self) -> u64;
 
     fn get_chunk_v2(&mut self, file: &File, uuid: String) -> Result<Option<Chunk>, XEngineError>;
     fn add_chunk_v2(&mut self, file: &File, chunk: Chunk) -> Result<Option<String>, XEngineError>;
